@@ -4,12 +4,14 @@
     <p class="text-sm text-base-content/60">Record here, or upload an existing audio file.</p>
 
     <!-- Record visual -->
-    <div class="flex flex-col items-center gap-5 py-10 bg-base-200 rounded-box mt-4">
-      <!-- Waveform: bars animate only while recording -->
-      <div class="waveform flex items-end gap-1 h-12" [class.waveform-active]="recordingState() === 'recording'"
-        aria-hidden="true">
-        @for (bar of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track bar) {
-        <span class="waveform-bar w-1.5 bg-primary/70 rounded-full" [style.--i]="bar"></span>
+    <div class="flex flex-col items-center gap-5 px-4 py-8 bg-base-200 rounded-box mt-4">
+      <div class="relative w-full h-24">
+        <div #waveform id="recorder" class="absolute inset-0"></div>
+
+        @if (recordingState() === 'inactive') {
+        <div class="absolute inset-0 flex items-center pointer-events-none">
+          <div class="h-px w-full bg-base-content/15"></div>
+        </div>
         }
       </div>
 
@@ -80,9 +82,9 @@
       </div>
     </div>
 
-    <div class="divider">OR UPLOAD A FILE</div>
-
     <!-- Upload dropzone -->
+    @if(!showUpload()) {
+    <div class="divider">OR UPLOAD A FILE</div>
     <div
       class="border-2 border-dashed border-base-300 rounded-box p-8 text-center hover:border-primary transition-colors">
       <input type="file" class="hidden" accept="audio/*" #fileInput (change)="onFileSelected($event)">
@@ -97,6 +99,7 @@
         files</button>
       <p class="mt-2 text-xs text-base-content/40">MP3, WAV, M4A up to 100MB</p>
     </div>
+    }
 
     @if (showUpload() && !uploading()) {
     <div class="alert bg-base-200 border border-base-300 mt-4 flex items-center justify-between">

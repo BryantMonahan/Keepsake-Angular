@@ -40,7 +40,7 @@ export class VoiceRecorder implements OnInit {
   }
 
   startRecording() {
-    this.audioRecordingService.startRecording()
+    this.audioRecordingService.startRecording('#recorder')
   }
 
   pauseRecording() {
@@ -57,10 +57,14 @@ export class VoiceRecorder implements OnInit {
 
   async finishRecording(blob: Blob) {
     console.log("finished Recording")
-    const file = new File([blob], Date.now().toString() + `.${blob.type.replace('audio/', '')}`, {
+    const now = new Date()
+    console.log(blob.type)
+    const fileName = `${now.toLocaleDateString().replaceAll('/', '-')}-${now.getHours()}-${now.getMinutes()}.${blob.type.replace('audio/', '').replace(';codecs=opus', '')}`
+    const file = new File([blob], fileName, {
       type: blob.type,
       lastModified: Date.now()
     })
+
     console.log(file)
 
     const dataTransfer = new DataTransfer()

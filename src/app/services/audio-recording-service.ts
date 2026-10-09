@@ -1,69 +1,83 @@
-import { Injectable, signal } from '@angular/core';
+import { AlertService } from './alert-service';
+import { inject, Injectable, signal } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
+import WaveSurfer from 'wavesurfer.js';
+import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js'
 
 @Injectable({
   providedIn: 'root',
 })
 export class AudioRecordingService {
+  private alertService = inject(AlertService)
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private audioBlobSubject = new Subject<Blob>();
+  private waveSurfer = signal<WaveSurfer | null>(null)
+  private record = signal<RecordPlugin | null>(null)
   recordingState = signal<RecordingState>("inactive")
   secondsElapsed = signal(0)
   timerInterval: ReturnType<typeof setInterval> | null = null
   audioBlob$: Observable<Blob> = this.audioBlobSubject.asObservable();
 
-  async startRecording() {
-    this.audioChunks = []
-    this.secondsElapsed.set(0)
-
+  async startRecording(container: string) {
     try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      this.mediaRecorder = new MediaRecorder(audioStream)
+      this.waveSurfer.set(WaveSurfer.create({
+        container,
+        waveColor: '#4F4A85',
+        progressColor: '#383351',
+        interact: false,
+        height: 96,
+        cursorWidth: 0
+      }))
 
-      // when new blob chunks become available, push them to our array
-      this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size > 0) this.audioChunks.push(event.data)
-      }
-
-      this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
-        this.audioBlobSubject.next(audioBlob)
-        audioStream.getTracks().forEach(track => track.stop())
-      }
-
-      this.mediaRecorder.start()
-      this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
+      this.record.set(this.waveSurfer()?.registerPlugin(RecordPlugin.create({
+        renderRecordedAudio: true,
+        scrollingWaveform: true,
+      })) ?? null)
+      this.record()?.on('record-end', (blob) => {
+        this.audioBlobSubject.next(blob)
+        this.waveSurfer()?.destroy()
+        console.log('Type:', blob.type)
+      })
+      await this.record()?.startRecording()
       this.recordingState.set("recording")
+      this.secondsElapsed.set(0)
+      this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
     } catch (error) {
       console.log(error)
-      throw error
+      // tear down the half-created instance so the next attempt starts clean
+      this.waveSurfer()?.destroy()
+      this.waveSurfer.set(null)
+      this.record.set(null)
+      const message = error instanceof Error && error.message.includes('Requested device not found')
+        ? "No microphone found. Plug one in or check your browser's mic settings."
+        : 'Something went wrong starting to record'
+      this.alertService.openSnackbar(message, 'red', 3000)
     }
   }
 
   pauseRecording() {
-    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-      this.mediaRecorder.pause()
-      console.log(this.secondsElapsed())
-      clearInterval(this.timerInterval!)
+    if (this.record()) {
+      this.record()?.pauseRecording()
       this.recordingState.set("paused")
+      clearInterval(this.timerInterval!)
     }
   }
 
   resumeRecording() {
-    if (this.mediaRecorder && this.mediaRecorder.state === 'paused') {
-      this.mediaRecorder.resume()
-      this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
+    if (this.record()) {
+      this.record()?.resumeRecording()
       this.recordingState.set("recording")
+      this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
     }
   }
 
-  stopRecording() {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop()
+  async stopRecording() {
+    if (this.record()) {
+      this.record()?.stopRecording()
+      this.recordingState.set("inactive")
       clearInterval(this.timerInterval!)
       this.secondsElapsed.set(0)
-      this.recordingState.set("inactive")
     }
   }
 }
