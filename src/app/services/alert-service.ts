@@ -11,7 +11,7 @@ export class AlertService {
   private matSnackBarService = inject(MatSnackBar)
   private matDialog = inject(MatDialog)
 
-  openSnackbar(message: string, color: "green" | "red", duration: number
+  openSnackbar(message: string, color: "green" | "red" | "yellow", duration: number
   ) {
     this.matSnackBarService.open(message, undefined, {
       duration,

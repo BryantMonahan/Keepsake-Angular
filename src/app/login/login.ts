@@ -1,7 +1,9 @@
+import { AuthService } from './../services/auth-service';
 import { Component, inject, signal } from '@angular/core';
 import { FormField, form, minLength, required } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import axios from 'axios';
+import { User } from '../Types/user';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +13,7 @@ import axios from 'axios';
 })
 export class Login {
   private router = inject(Router)
+  private authService = inject(AuthService)
   loginModel = signal<{ username: string; password: string }>({
     username: '',
     password: ''
@@ -23,13 +26,13 @@ export class Login {
   })
 
   async login() {
-    const res = await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Auth/login`, {
+    const res = await axios.post<User>(`${import.meta.env.NG_APP_API_URL}/api/Auth/login`, {
       Username: this.loginForm.username().value(),
       Password: this.loginForm.password().value()
     })
     this.loginForm.password().value.set("")
     if (res.status === 200) {
-      localStorage.setItem("username", this.loginForm.username().value())
+      this.authService.setUser(res.data)
       this.router.navigate(['/dashboard'])
     }
   }
