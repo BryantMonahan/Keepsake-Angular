@@ -21,7 +21,6 @@ export class NotificationService implements OnDestroy {
 
   async getNotification() {
     if (!this.authService.isLoggedIn()) return
-    console.log(this.mostRecent(), this.notifications())
     const notifRes = await axios.get<Notification[]>(`${import.meta.env.NG_APP_API_URL}/api/notification/notifications`, {
       params: { sinceUtc: this.mostRecent() }
     })

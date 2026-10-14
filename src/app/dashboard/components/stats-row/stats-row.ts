@@ -10,7 +10,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './stats-row.html',
   styleUrl: './stats-row.css',
 })
-export class StatsRow implements OnInit {
+export class StatsRow {
   private updateDataService = inject(UpdateDataService)
   totalEntries = signal(0)
   bytesUsed = signal(0)
@@ -19,21 +19,16 @@ export class StatsRow implements OnInit {
   wordsTotal = signal(0)
   longestEntrySeconds = signal(0)
   percentTranscribed = computed(() => {
+    if (this.totalEntries() === 0) return '0%'
     return ((Math.floor(this.transcribedTotal() / this.totalEntries() * 100))).toFixed(0).toString() + "%"
   })
+  updateData = effect(async () => {
+    this.updateDataService.updateEntriesVar()
+    await this.getStats()
+  })
 
-  public StatsRow() {
-    effect(async () => {
-      this.updateDataService.updateEntriesVar()
-      await this.updateData()
-    })
-  }
 
-  async ngOnInit() {
-    await this.updateData()
-  }
-
-  async updateData() {
+  async getStats() {
     const weeklyDataRes = await axios.get<StatsRowRes>(`${import.meta.env.NG_APP_API_URL}/api/Stats/stats-bar`)
     console.log(weeklyDataRes)
     this.totalEntries.set(weeklyDataRes.data.totalEntries)

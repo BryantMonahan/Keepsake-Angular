@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './recent-entries.html',
   styleUrl: './recent-entries.css',
 })
-export class RecentEntries implements OnInit, OnDestroy {
+export class RecentEntries implements OnDestroy {
   private alertService = inject(AlertService)
   private updateDataService = inject(UpdateDataService)
   private matDialog = inject(MatDialog)
@@ -29,9 +29,6 @@ export class RecentEntries implements OnInit, OnDestroy {
     await this.getEntries()
   })
 
-  async ngOnInit() {
-    await this.getEntries()
-  }
 
   async getEntries() {
     // get the most recent entries that the user has made

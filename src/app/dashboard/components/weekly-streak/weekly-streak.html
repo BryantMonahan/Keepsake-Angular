@@ -2,9 +2,9 @@
   <div class="card-body">
     <h2 class="card-title text-base">Past 7 Days</h2>
     <div class="flex justify-between mt-2">
-      @for (day of days; track $index) {
+      @for (day of days(); track $index) {
       <div class="flex flex-col items-center gap-1">
-        <span class="text-xs" [class]="$index === days.length - 1 ? 'text-warning mx-0' : 'text-base-content/50'">{{
+        <span class="text-xs" [class]="$last ? 'text-warning mx-0' : 'text-base-content/50'">{{
           day.day }}</span>
         @if (day.active) {
         <span class="w-2 h-2 rounded-full bg-success"></span>
