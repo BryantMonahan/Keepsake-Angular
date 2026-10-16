@@ -1,6 +1,6 @@
 import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import axios from 'axios';
-import { UpdateDataService } from '../../../services/update-data-service';
+import { DataService } from '../../../services/data-service';
 
 @Component({
   selector: 'app-weekly-streak',
@@ -10,11 +10,11 @@ import { UpdateDataService } from '../../../services/update-data-service';
 })
 export class WeeklyStreak {
   private Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  private updateDataService = inject(UpdateDataService)
+  private dataService = inject(DataService)
   days = signal<{ day: string; active: boolean }[]>([])
   numOfEntriesText = signal("No entries")
   updateData = effect(async () => {
-    this.updateDataService.updateEntriesVar()
+    this.dataService.entriesChanged()
     await this.getPastSevenDays()
   })
 

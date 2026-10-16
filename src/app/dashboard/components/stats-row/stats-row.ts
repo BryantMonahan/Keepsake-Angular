@@ -1,4 +1,4 @@
-import { UpdateDataService } from './../../../services/update-data-service';
+import { DataService } from './../../../services/data-service';
 import { Component, computed, OnInit, signal, effect, inject } from '@angular/core';
 import axios from 'axios';
 import { StatsRowRes } from '../../../Types/stats-bar-res';
@@ -11,7 +11,7 @@ import { DatePipe } from '@angular/common';
   styleUrl: './stats-row.css',
 })
 export class StatsRow {
-  private updateDataService = inject(UpdateDataService)
+  private dataService = inject(DataService)
   totalEntries = signal(0)
   bytesUsed = signal(0)
   secondTotal = signal(0)
@@ -23,7 +23,7 @@ export class StatsRow {
     return ((Math.floor(this.transcribedTotal() / this.totalEntries() * 100))).toFixed(0).toString() + "%"
   })
   updateData = effect(async () => {
-    this.updateDataService.updateEntriesVar()
+    this.dataService.entriesChanged()
     await this.getStats()
   })
 

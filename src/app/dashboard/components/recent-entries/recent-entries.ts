@@ -1,8 +1,7 @@
 import { AlertService } from '../../../services/alert-service';
-import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import axios from 'axios';
-import { JournalEntry } from '../../../Types/journal-entry';
-import { UpdateDataService } from '../../../services/update-data-service';
+import { DataService } from '../../../services/data-service';
 import { DatePipe } from '@angular/common';
 import { MatDialog, MatDialogRef } from "@angular/material/dialog"
 import { ConfirmDialog } from '../../../helpers/confirm-dialog/confirm-dialog';
@@ -15,11 +14,12 @@ import { form, FormField, required } from '@angular/forms/signals';
   templateUrl: './recent-entries.html',
   styleUrl: './recent-entries.css',
 })
-export class RecentEntries implements OnDestroy {
+export class RecentEntries implements OnInit, OnDestroy {
   private alertService = inject(AlertService)
-  private updateDataService = inject(UpdateDataService)
+  private dataService = inject(DataService)
   private matDialog = inject(MatDialog)
-  entries = signal<JournalEntry[]>([])
+  // the most recent entries that the user has made
+  entries = computed(() => this.dataService.entries().slice(0, 5))
   // vars used to play audio
   private audio: HTMLAudioElement | null = null
   playingKey = signal<string | null>(null)
@@ -36,22 +36,13 @@ export class RecentEntries implements OnDestroy {
   entryForm = form(this.entryModel, (schema) => {
     required(schema.name, { message: "A title is required" })
   })
-  // load the data on load and when the dataService signals to reload data
-  updateData = effect(async () => {
-    this.updateDataService.updateEntriesVar()
-    await this.getEntries()
-  })
-
-
-  async getEntries() {
-    // get the most recent entries that the user has made
-    const recentEntriesRes = await axios.get<JournalEntry[]>(`${import.meta.env.NG_APP_API_URL}/api/Audio/most-recent-entries`, {
-      params: {
-        numOfEntries: 5
-      }
-    })
-    this.entries.set(recentEntriesRes.data)
-    console.log(this.entries())
+  async ngOnInit() {
+    try {
+      await this.dataService.loadEntries()
+    } catch (error) {
+      console.log(error)
+      this.alertService.openSnackbar('Something went wrong loading entries', 'red', 2000)
+    }
   }
 
   async playAudio(objectKey: string) {
@@ -133,19 +124,13 @@ export class RecentEntries implements OnDestroy {
 
   async saveEdit() {
     try {
-      const urlRes = await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/update-entry`, {
-        id: this.editing(),
-        name: this.entryForm.name().touched() ? this.entryForm.name().value() : null,
-        description: this.entryForm.description().touched() ? this.entryForm.description().value() : null
-      })
-
-      this.entries.update((entries) => entries.map((entry) => {
-        if (entry.id === this.editing()) {
-          entry.name = this.entryForm.name().touched() ? this.entryForm.name().value() : ""
-          entry.description = this.entryForm.description().touched() ? this.entryForm.description().value() : ""
-        }
-        return entry
-      }))
+      const editingId = this.editing()
+      if (editingId === null) return
+      // only send the fields the user changed
+      const changes: { name?: string; description?: string } = {}
+      if (this.entryForm.name().touched()) changes.name = this.entryForm.name().value()
+      if (this.entryForm.description().touched()) changes.description = this.entryForm.description().value()
+      await this.dataService.updateEntry(editingId, changes)
       this.alertService.openSnackbar('Changes saved', 'green', 2000)
     } catch (e) {
       this.alertService.openSnackbar('Something went wrong saving your changes', 'red', 2000)
@@ -157,12 +142,11 @@ export class RecentEntries implements OnDestroy {
     this.editing.set(null)
   }
 
-  async delete(id: string) {
+  async delete(objectKey: string) {
     try {
       const confirmed = await this.confirmDelete()
       if (!confirmed) return
-      const deleteEntryRes = await axios.delete(`${import.meta.env.NG_APP_API_URL}/api/Audio/delete-entry`, { headers: { ObjectKey: id } })
-      this.updateDataService.updateEntries()
+      await this.dataService.deleteEntry(objectKey)
       this.alertService.openSnackbar("Entry deleted", "green", 2000)
     } catch (error) {
       console.log(error)
@@ -176,21 +160,9 @@ export class RecentEntries implements OnDestroy {
     return result ?? false
   }
 
-  async favorite(entryId: string, currVal: boolean) {
+  async favorite(entryId: string) {
     try {
-      await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/update-entry`, {
-        Id: entryId,
-        Favorite: !currVal
-      })
-      // flip the var in our array. No other component depends on an entry being favorited so it doesn't need to trigger a data refresh
-      this.entries.update(entries => entries.map(entry => {
-        if (entry.id === entryId) {
-          entry.favorite = !entry.favorite
-          return entry
-        } else {
-          return entry
-        }
-      }))
+      await this.dataService.toggleFavorite(entryId)
     } catch (error) {
       console.log(error)
       this.alertService.openSnackbar("Something went wrong favoriting entry", "red", 2000)

@@ -21,6 +21,7 @@ export class AudioRecordingService {
 
   async startRecording(container: string) {
     try {
+      this.recordingState.set("recording")
       this.waveSurfer.set(WaveSurfer.create({
         container,
         waveColor: '#4F4A85',
@@ -40,7 +41,6 @@ export class AudioRecordingService {
         console.log('Type:', blob.type)
       })
       await this.record()?.startRecording()
-      this.recordingState.set("recording")
       this.secondsElapsed.set(0)
       this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
     } catch (error) {

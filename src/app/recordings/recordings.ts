@@ -6,7 +6,7 @@ import { Topbar } from '../dashboard/components/topbar/topbar';
 import { Sidebar } from '../dashboard/components/sidebar/sidebar';
 import { JournalEntry } from '../Types/journal-entry';
 import { AlertService } from '../services/alert-service';
-import { UpdateDataService } from '../services/update-data-service';
+import { DataService } from '../services/data-service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialog } from '../helpers/confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
@@ -27,7 +27,7 @@ export type DatePreset = 'today' | '7d' | '30d' | 'year' | 'all';
 })
 export class Recordings implements OnInit {
   private alertService = inject(AlertService)
-  private updateDataService = inject(UpdateDataService)
+  private dataService = inject(DataService)
   private matDialog = inject(MatDialog)
   TranscriptionStatus = TranscriptionStatus
   waveSurfer = signal<WaveSurfer | null>(null)
@@ -35,9 +35,7 @@ export class Recordings implements OnInit {
   async ngOnInit() {
     try {
       this.loading.set(true)
-      const entriesRes = await axios.get(`${import.meta.env.NG_APP_API_URL}/Api/audio/entries`)
-      this.entries.set(entriesRes.data)
-      console.log(this.entries())
+      await this.dataService.loadEntries()
       this.loading.set(false)
     } catch (error) {
       console.log(error)
@@ -47,7 +45,7 @@ export class Recordings implements OnInit {
   }
   readonly pageSize = 50
 
-  entries = signal<JournalEntry[]>([])
+  entries = this.dataService.entries
   visible = computed<JournalEntry[]>(() => {
     let currEntries = this.entries().slice()
 
@@ -259,18 +257,7 @@ export class Recordings implements OnInit {
 
   async favorite(entryId: string) {
     try {
-      await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/favorite`, {
-        Id: entryId
-      })
-      // flip the var in our array. No other component depends on an entry being favorited so it doesn't need to trigger a data refresh
-      this.entries.update(entries => entries.map(entry => {
-        if (entry.id === entryId) {
-          entry.favorite = !entry.favorite
-          return entry
-        } else {
-          return entry
-        }
-      }))
+      await this.dataService.toggleFavorite(entryId)
     } catch (error) {
       console.log(error)
       this.alertService.openSnackbar("Something went wrong favoriting entry", "red", 2000)
@@ -297,9 +284,7 @@ export class Recordings implements OnInit {
     try {
       const confirmed = await this.confirmDelete()
       if (!confirmed) return
-      await axios.delete(`${import.meta.env.NG_APP_API_URL}/api/Audio/delete-entry`, { headers: { ObjectKey: objectKey } })
-      this.updateDataService.updateEntries()
-      this.entries.update(entries => entries.filter(entry => entry.objectKey !== objectKey))
+      await this.dataService.deleteEntry(objectKey)
       this.alertService.openSnackbar("Entry deleted", "green", 2000)
     } catch (error) {
       console.log(error)
