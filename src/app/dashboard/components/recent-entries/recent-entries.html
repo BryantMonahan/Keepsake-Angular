@@ -42,8 +42,18 @@
               }
             </td>
             <td>
+              @if (editing() === entry.id) {
+              <div class="font-medium"><label class="label text-lg">Title</label>
+                <input type="text" class="input" placeholder="Title" [formField]="entryForm.name" />
+              </div>
+              <div class="text-xs text-base-content/50"><label class="label text-lg">Description</label>
+                <input type="text" class="input" placeholder="Description (optional)"
+                  [formField]="entryForm.description" />
+              </div>
+              }@else {
               <div class="font-medium">{{ entry.title ?? entry.name }}</div>
               <div class="text-xs text-base-content/50">{{ entry.description || "No description" }}</div>
+              }
               @if (playingKey() === entry.objectKey) {
               <div class="flex items-center gap-2 mt-1">
                 <input type="range" class="range range-xs range-primary w-40" min="0" [max]="duration()" step="0.1"
@@ -65,8 +75,45 @@
             }
             <td>
               <div class="flex justify-end gap-1">
+                @if (editing() === entry.id) {
+                <button type="button" class="btn btn-ghost btn-xs btn-circle text-success" aria-label="Save Changes"
+                  title="Save Changes" (click)="saveEdit()">
+                  <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" stroke="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M14.431 3.323l-8.47 10-.79-.036-3.35-4.77.818-.574 2.978 4.24 8.051-9.506.764.646z" />
+                  </svg></button>
+                <button type="button" class="btn btn-ghost btn-xs btn-circle text-error" aria-label="Discard Changes"
+                  title="Discard Changes" (click)="cancelEdit()">
+                  <svg class="h-4 w-4" strokeviewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" stroke="currentColor" stroke-width="1" clip-rule="evenodd"
+                      d="M6.7929 7.49998L1.14645 1.85353L1.85356 1.14642L7.50001 6.79287L13.1465 1.14642L13.8536 1.85353L8.20711 7.49998L13.8536 13.1464L13.1465 13.8535L7.50001 8.20708L1.85356 13.8535L1.14645 13.1464L6.7929 7.49998Z"
+                      fill="#000000" />
+                  </svg></button>
+                }@else {
+
+                <button type="button" class="btn btn-ghost btn-xs btn-circle" aria-label="Edit" title="Edit"
+                  (click)="setEdit(entry.id)">
+                  <svg fill="currentColor" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" class="h-4 w-4" viewBox="0 0 494.936 494.936"
+                    xml:space="preserve">
+                    <g>
+                      <g>
+                        <path d="M389.844,182.85c-6.743,0-12.21,5.467-12.21,12.21v222.968c0,23.562-19.174,42.735-42.736,42.735H67.157
+                			c-23.562,0-42.736-19.174-42.736-42.735V150.285c0-23.562,19.174-42.735,42.736-42.735h267.741c6.743,0,12.21-5.467,12.21-12.21
+                			s-5.467-12.21-12.21-12.21H67.157C30.126,83.13,0,113.255,0,150.285v267.743c0,37.029,30.126,67.155,67.157,67.155h267.741
+                			c37.03,0,67.156-30.126,67.156-67.155V195.061C402.054,188.318,396.587,182.85,389.844,182.85z" />
+                        <path d="M483.876,20.791c-14.72-14.72-38.669-14.714-53.377,0L221.352,229.944c-0.28,0.28-3.434,3.559-4.251,5.396l-28.963,65.069
+                			c-2.057,4.619-1.056,10.027,2.521,13.6c2.337,2.336,5.461,3.576,8.639,3.576c1.675,0,3.362-0.346,4.96-1.057l65.07-28.963
+                			c1.83-0.815,5.114-3.97,5.396-4.25L483.876,74.169c7.131-7.131,11.06-16.61,11.06-26.692
+                			C494.936,37.396,491.007,27.915,483.876,20.791z M466.61,56.897L257.457,266.05c-0.035,0.036-0.055,0.078-0.089,0.107
+                			l-33.989,15.131L238.51,247.3c0.03-0.036,0.071-0.055,0.107-0.09L447.765,38.058c5.038-5.039,13.819-5.033,18.846,0.005
+                			c2.518,2.51,3.905,5.855,3.905,9.414C470.516,51.036,469.127,54.38,466.61,56.897z" />
+                      </g>
+                    </g>
+                  </svg>
+                </button>
                 <button type="button" class="btn btn-ghost btn-xs btn-circle" aria-label="Favorite" title="Favorite"
-                  (click)="favorite(entry.id)">
+                  (click)="favorite(entry.id, entry.favorite)">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning"
                     [style.fill]="entry.favorite ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"
                     stroke-width="2">
@@ -83,13 +130,15 @@
                   </svg>
                 </button>
                 <button type="button" class="btn btn-ghost btn-xs btn-circle text-error" title="Delete"
-                  aria-label="       Delete" (click)="delete(entry.objectKey)">
+                  aria-label="Delete" (click)="delete(entry.objectKey)">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                       d="M19 7l-.87 12.14A2 2 0 0116.14 21H7.86a2 2 0 01-1.99-1.86L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
                   </svg>
                 </button>
+                }
+
               </div>
             </td>
           </tr>

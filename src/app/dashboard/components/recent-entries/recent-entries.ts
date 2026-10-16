@@ -7,10 +7,11 @@ import { DatePipe } from '@angular/common';
 import { MatDialog, MatDialogRef } from "@angular/material/dialog"
 import { ConfirmDialog } from '../../../helpers/confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
+import { form, FormField, required } from '@angular/forms/signals';
 
 @Component({
   selector: 'app-recent-entries',
-  imports: [DatePipe],
+  imports: [DatePipe, FormField],
   templateUrl: './recent-entries.html',
   styleUrl: './recent-entries.css',
 })
@@ -19,11 +20,23 @@ export class RecentEntries implements OnDestroy {
   private updateDataService = inject(UpdateDataService)
   private matDialog = inject(MatDialog)
   entries = signal<JournalEntry[]>([])
+  // vars used to play audio
   private audio: HTMLAudioElement | null = null
   playingKey = signal<string | null>(null)
   isPlaying = signal(false)
   currentTime = signal(0)
   duration = signal(0)
+  // used to keep track of what's being edited
+  editing = signal<null | string>(null)
+  // form data used to rename and change descriptions for journal entries
+  entryModel = signal<{ name: string; description: string }>({
+    name: '',
+    description: ''
+  })
+  entryForm = form(this.entryModel, (schema) => {
+    required(schema.name, { message: "A title is required" })
+  })
+  // load the data on load and when the dataService signals to reload data
   updateData = effect(async () => {
     this.updateDataService.updateEntriesVar()
     await this.getEntries()
@@ -108,6 +121,42 @@ export class RecentEntries implements OnDestroy {
     document.body.removeChild(link)
   }
 
+  setEdit(id: string) {
+    const entry = this.entries().find(e => e.id === id)
+    console.log(entry)
+    this.editing.set(id)
+    this.entryModel.set({
+      name: entry?.name ?? "",
+      description: entry?.description ?? ""
+    })
+  }
+
+  async saveEdit() {
+    try {
+      const urlRes = await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/update-entry`, {
+        id: this.editing(),
+        name: this.entryForm.name().touched() ? this.entryForm.name().value() : null,
+        description: this.entryForm.description().touched() ? this.entryForm.description().value() : null
+      })
+
+      this.entries.update((entries) => entries.map((entry) => {
+        if (entry.id === this.editing()) {
+          entry.name = this.entryForm.name().touched() ? this.entryForm.name().value() : ""
+          entry.description = this.entryForm.description().touched() ? this.entryForm.description().value() : ""
+        }
+        return entry
+      }))
+      this.alertService.openSnackbar('Changes saved', 'green', 2000)
+    } catch (e) {
+      this.alertService.openSnackbar('Something went wrong saving your changes', 'red', 2000)
+      console.log(e)
+    }
+  }
+
+  cancelEdit() {
+    this.editing.set(null)
+  }
+
   async delete(id: string) {
     try {
       const confirmed = await this.confirmDelete()
@@ -127,10 +176,11 @@ export class RecentEntries implements OnDestroy {
     return result ?? false
   }
 
-  async favorite(entryId: string) {
+  async favorite(entryId: string, currVal: boolean) {
     try {
-      await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/favorite`, {
-        Id: entryId
+      await axios.post(`${import.meta.env.NG_APP_API_URL}/api/Audio/update-entry`, {
+        Id: entryId,
+        Favorite: !currVal
       })
       // flip the var in our array. No other component depends on an entry being favorited so it doesn't need to trigger a data refresh
       this.entries.update(entries => entries.map(entry => {
