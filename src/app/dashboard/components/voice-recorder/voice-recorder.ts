@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, inject, OnInit, signal, ViewChild } 
 import axios, { AxiosProgressEvent } from 'axios';
 import { UrlResponse } from '../../../Types/url-response';
 import { AlertService } from '../../../services/alert-service';
-import { UpdateDataService } from '../../../services/update-data-service';
+import { DataService } from '../../../services/data-service';
 import { AudioRecordingService } from '../../../services/audio-recording-service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { FormatDurationPipe } from '../../../pipes/format-duration-pipe';
@@ -29,7 +29,7 @@ export class VoiceRecorder implements OnInit {
     required(schema.title, { message: "A title is required" })
   })
   private alertService = inject(AlertService)
-  private updateDataService = inject(UpdateDataService)
+  private dataService = inject(DataService)
   private audioRecordingService = inject(AudioRecordingService)
   private destroyRef = inject(DestroyRef)
 
@@ -40,7 +40,9 @@ export class VoiceRecorder implements OnInit {
   }
 
   startRecording() {
-    this.audioRecordingService.startRecording('#recorder')
+    if (this.audioRecordingService.recordingState() === 'inactive') {
+      this.audioRecordingService.startRecording('#recorder')
+    }
   }
 
   pauseRecording() {
@@ -123,7 +125,7 @@ export class VoiceRecorder implements OnInit {
       })
       this.alertService.openSnackbar("File uploaded 🎉", "green", 3000)
       // trigger other components to reload data
-      this.updateDataService.updateEntries()
+      await this.dataService.refreshEntries()
 
     } catch (error) {
       console.log(error)

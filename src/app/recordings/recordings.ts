@@ -1,7 +1,7 @@
 import { TranscriptionStatus } from './../Types/transcription-status';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Topbar } from '../dashboard/components/topbar/topbar';
 import { Sidebar } from '../dashboard/components/sidebar/sidebar';
 import { JournalEntry } from '../Types/journal-entry';
@@ -29,14 +29,22 @@ export class Recordings implements OnInit {
   private alertService = inject(AlertService)
   private dataService = inject(DataService)
   private matDialog = inject(MatDialog)
+  private route = inject(ActivatedRoute)
+
   TranscriptionStatus = TranscriptionStatus
   waveSurfer = signal<WaveSurfer | null>(null)
+  providedId = signal<string | null>(null)
 
   async ngOnInit() {
     try {
       this.loading.set(true)
       await this.dataService.loadEntries()
+      const id = this.route.snapshot.queryParams['id'] ?? null
+      // if (id) this.playingKey.set(this.entries().find(e => e.id === id)?.objectKey ?? "")
+      if (id) await this.playAudio(this.entries().find(e => e.id === id)?.objectKey ?? "")
+      if (id) this.pauseAudio()
       this.loading.set(false)
+      console.log(id, this.playingKey())
     } catch (error) {
       console.log(error)
       this.alertService.openSnackbar('Something went wrong loading entries', 'red', 2000)
@@ -216,6 +224,7 @@ export class Recordings implements OnInit {
       const urlRes = await axios.get<string>(`${import.meta.env.NG_APP_API_URL}/api/Audio/get-url`, {
         params: { objectKey }
       })
+      console.log(document.getElementById(objectKey)) // null so wavesurfer doesn't have a container to build into
       this.waveSurfer.set(WaveSurfer.create({
         container: document.getElementById(objectKey)!,
         waveColor: 'rgb(200, 0, 200)',

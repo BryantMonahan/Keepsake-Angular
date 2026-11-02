@@ -18,10 +18,13 @@ export class AudioRecordingService {
   secondsElapsed = signal(0)
   timerInterval: ReturnType<typeof setInterval> | null = null
   audioBlob$: Observable<Blob> = this.audioBlobSubject.asObservable();
+  // true while waiting on the mic, so rapid clicks don't create a second WaveSurfer
+  private starting = false
 
   async startRecording(container: string) {
+    if (this.starting || this.recordingState() !== 'inactive') return
+    this.starting = true
     try {
-      this.recordingState.set("recording")
       this.waveSurfer.set(WaveSurfer.create({
         container,
         waveColor: '#4F4A85',
@@ -41,6 +44,7 @@ export class AudioRecordingService {
         console.log('Type:', blob.type)
       })
       await this.record()?.startRecording()
+      this.recordingState.set("recording")
       this.secondsElapsed.set(0)
       this.timerInterval = setInterval(() => this.secondsElapsed.update(t => t + .25), 250)
     } catch (error) {
@@ -53,6 +57,8 @@ export class AudioRecordingService {
         ? "No microphone found. Plug one in or check your browser's mic settings."
         : 'Something went wrong starting to record'
       this.alertService.openSnackbar(message, 'red', 3000)
+    } finally {
+      this.starting = false
     }
   }
 
