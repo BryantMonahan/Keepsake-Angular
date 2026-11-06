@@ -1,0 +1,30 @@
+<section class="card" aria-labelledby="otd-title">
+  <h2 id="otd-title">On this day</h2>
+
+  <ul class="mt-4">
+    @for (look of lookbacks(); track look.label) {
+    <li class="grid gap-2 border-b border-rule py-4 last:border-b-0 last:pb-0">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <span class="text-md font-medium text-ink">{{ look.label }}</span>
+        <time class="text-sm font-medium text-muted" [attr.datetime]="look.date | date: 'yyyy-MM-dd'">{{ look.date | date: 'EEE, MMM d, y' }}</time>
+      </div>
+      @if (look.entries.length) {
+      <ul class="grid gap-1">
+        @for (entry of look.entries; track entry.id) {
+        <li class="flex min-w-0 items-baseline justify-between gap-3">
+          <a class="link min-w-0 truncate" [routerLink]="['/recordings']" [queryParams]="{ id: entry.id }">{{ entry.title || entry.name }}</a>
+          <span class="num text-sm text-muted">{{ entry.secLength | formatDuration }}</span>
+        </li>
+        }
+      </ul>
+      } @else {
+      <p class="text-sm text-muted">Nothing recorded</p>
+      }
+    </li>
+    }
+  </ul>
+
+  @if (!hasAny()) {
+  <p class="mt-4 text-sm text-muted">Keep recording, and the days you capture now come back here.</p>
+  }
+</section>

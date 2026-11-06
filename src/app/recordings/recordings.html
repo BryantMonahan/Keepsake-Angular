@@ -1,416 +1,250 @@
-<div class="drawer lg:drawer-open bg-base-200 min-h-screen">
-  <input id="dashboard-drawer" type="checkbox" class="drawer-toggle" />
+<app-shell>
+  <header class="flex flex-wrap items-end justify-between gap-6">
+    <div>
+      <h1>Recordings</h1>
+      <p class="mt-2 max-w-[52ch] text-lg leading-snug text-ink-2">Every entry you’ve captured, in one place.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+      <span class="text-sm font-medium text-muted">{{ entries().length }} total</span>
+      <a class="btn btn--primary" [routerLink]="['/dashboard']" fragment="record">
+        <app-icon name="mic" [size]="16" />
+        New recording
+      </a>
+    </div>
+  </header>
 
-  <div class="drawer-content flex flex-col">
-    <app-topbar></app-topbar>
-
-    <main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-      <!-- Page header -->
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Recordings</h1>
-          <p class="text-base-content/60 mt-1">
-            Every entry you've captured, in one place.
-          </p>
+  <!-- Filters -->
+  <section class="grid gap-4 rounded-card bg-paper-2 p-4 sm:p-6" aria-label="Filter recordings">
+    <div class="flex flex-wrap items-end gap-x-10 gap-y-6">
+      <fieldset class="grid max-w-full min-w-0 gap-2">
+        <legend class="mb-2 text-sm text-ink">Status</legend>
+        <div class="seg max-sm:grid max-sm:w-full max-sm:grid-cols-2">
+          <button type="button" [attr.aria-pressed]="statusFilter() === 'all'" (click)="setStatusFilter('all')">All</button>
+          <button type="button" [attr.aria-pressed]="statusFilter() === 'transcribed'"
+            (click)="setStatusFilter('transcribed')">Transcribed</button>
+          <button type="button" [attr.aria-pressed]="statusFilter() === 'processing'"
+            (click)="setStatusFilter('processing')">Processing</button>
+          <button type="button" [attr.aria-pressed]="statusFilter() === 'none'" (click)="setStatusFilter('none')">No
+            transcript</button>
         </div>
+      </fieldset>
 
+      <fieldset class="grid max-w-full min-w-0 gap-2">
+        <legend class="mb-2 text-sm text-ink">Uploaded</legend>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="relative block w-full sm:w-49">
+            <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">From</span>
+            <input type="date" class="input pl-13 text-sm" aria-label="Uploaded from" [value]="fromDate() ?? ''"
+              (change)="setFromDate($event)" />
+          </label>
+          <label class="relative block w-full sm:w-49">
+            <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">To</span>
+            <input type="date" class="input pl-13 text-sm" aria-label="Uploaded to" [value]="toDate() ?? ''"
+              (change)="setToDate($event)" />
+          </label>
+          <details class="menu">
+            <summary class="btn btn--quiet">
+              Presets
+              <app-icon name="chevron-down" [size]="16" />
+            </summary>
+            <ul class="menu__list right-auto left-0">
+              <li><button type="button" class="menu__item" (click)="setDatePreset('today')">Today</button></li>
+              <li><button type="button" class="menu__item" (click)="setDatePreset('7d')">Last 7 days</button></li>
+              <li><button type="button" class="menu__item" (click)="setDatePreset('30d')">Last 30 days</button></li>
+              <li><button type="button" class="menu__item" (click)="setDatePreset('year')">Last year</button></li>
+              <li><button type="button" class="menu__item" (click)="setDatePreset('all')">All time</button></li>
+            </ul>
+          </details>
+        </div>
+      </fieldset>
+    </div>
+
+    @if (hasActiveFilters()) {
+    <div class="flex flex-wrap items-center gap-2 border-t border-rule-2 pt-4">
+      <span class="text-sm font-medium text-muted">Filtering by</span>
+
+      @if (statusFilter() !== 'all') {
+      <span class="tag tag--pending gap-2 pr-1">
+        {{ statusLabel() }}
+        <button type="button" [class]="chipX" aria-label="Clear status filter" (click)="setStatusFilter('all')">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </span>
+      }
+
+      @if (fromDate() || toDate()) {
+      <span class="tag tag--pending gap-2 pr-1">
+        {{ fromDate() ? (fromDate() | date: 'MMM d, y') : 'Anytime' }}
+        to
+        {{ toDate() ? (toDate() | date: 'MMM d, y') : 'now' }}
+        <button type="button" [class]="chipX" aria-label="Clear date filter" (click)="setDatePreset('all')">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </span>
+      }
+
+      <button type="button" class="btn btn--quiet ml-auto" (click)="clearFilters()">Clear all</button>
+    </div>
+    }
+  </section>
+
+  <!-- Results -->
+  <section class="card" aria-labelledby="results-title">
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4">
+      <h2 id="results-title" class="min-w-0 text-lg! break-words">
+        @if (loading()) {
+        Loading recordings…
+        } @else if (entries().length === 0) {
+        No recordings
+        } @else {
+        Showing {{ rangeStart() }} to {{ rangeEnd() }}
+        of {{ this.visible().length }}
+        }
+      </h2>
+      <div class="flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
-          <span class="badge badge-lg badge-ghost font-mono">{{ entries().length }} total</span>
-          <a class="btn btn-primary btn-sm gap-2" [routerLink]="['/dashboard']" fragment="record">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1M12 18v4m-4 0h8" />
-            </svg>
-            New recording
-          </a>
+          <label class="text-sm text-ink" for="sort-order">Sort</label>
+          <span class="relative inline-flex w-42">
+            <select id="sort-order" class="input cursor-pointer appearance-none pr-10 text-sm" aria-label="Sort order"
+              [value]="sortOrder()" (change)="setSortOrder($event)">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="longest">Longest first</option>
+              <option value="shortest">Shortest first</option>
+            </select>
+            <app-icon name="chevron-down" [size]="16" class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-ink" />
+          </span>
         </div>
+        <span class="text-sm font-medium text-muted">{{ pageSize }} per page</span>
       </div>
+    </div>
 
-      <!-- Filter bar -->
-      <div class="card bg-base-100 shadow-sm border border-base-300">
-        <div class="card-body p-4 gap-4">
-          <div class="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-6">
+    @if (loading()) {
+    <ul aria-hidden="true">
+      @for (row of [1, 2, 3, 4, 5, 6]; track row) {
+      <li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0">
+        <div class="skeleton size-12"></div>
+        <div class="grid gap-2">
+          <div class="skeleton h-4 w-1/3"></div>
+          <div class="skeleton h-4 w-1/2"></div>
+        </div>
+      </li>
+      }
+    </ul>
+    }
 
-            <!-- Transcription status -->
-            <div class="flex flex-col gap-1.5">
-              <span class="text-xs font-medium uppercase tracking-wide text-base-content/50">Status</span>
-              <div class="join">
-                <button type="button" class="btn btn-sm join-item" [class.btn-active]="statusFilter() === 'all'"
-                  (click)="setStatusFilter('all')">
-                  All
-                </button>
-                <button type="button" class="btn btn-sm join-item gap-1.5"
-                  [class.btn-active]="statusFilter() === 'transcribed'" (click)="setStatusFilter('transcribed')">
-                  <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
-                  Transcribed
-                </button>
-                <button type="button" class="btn btn-sm join-item gap-1.5"
-                  [class.btn-active]="statusFilter() === 'processing'" (click)="setStatusFilter('processing')">
-                  <span class="inline-block h-2 w-2 rounded-full bg-warning"></span>
-                  Processing
-                </button>
-                <button type="button" class="btn btn-sm join-item gap-1.5"
-                  [class.btn-active]="statusFilter() === 'none'" (click)="setStatusFilter('none')">
-                  <span class="inline-block h-2 w-2 rounded-full bg-base-content/30"></span>
-                  No transcript
-                </button>
-              </div>
-            </div>
+    @else if (entries().length === 0) {
+    <div class="flex flex-col items-start gap-4 py-10">
+      @if (hasActiveFilters()) {
+      <h3 class="text-xl">No recordings match these filters</h3>
+      <p class="max-w-[48ch]">Try widening the date range or clearing the status filter.</p>
+      <button type="button" class="btn" (click)="clearFilters()">Clear filters</button>
+      } @else {
+      <h3 class="text-xl">Nothing recorded yet</h3>
+      <p class="max-w-[48ch]">Your entries will show up here once you record one.</p>
+      <a class="btn btn--primary" [routerLink]="['/dashboard']" fragment="record">Record your first entry</a>
+      }
+    </div>
+    }
 
-            <div class="hidden xl:block h-10 w-px bg-base-300"></div>
-
-            <!-- Uploaded between -->
-            <div class="flex flex-col gap-1.5">
-              <span class="text-xs font-medium uppercase tracking-wide text-base-content/50">Uploaded</span>
-              <div class="flex flex-wrap items-center gap-2">
-                <label class="input input-sm w-40 flex items-center gap-2">
-                  <span class="text-base-content/40 text-xs shrink-0">From</span>
-                  <input type="date" class="grow min-w-0" aria-label="Uploaded from" [value]="fromDate() ?? ''"
-                    (change)="setFromDate($event)" />
-                </label>
-                <span class="text-base-content/30">&ndash;</span>
-                <label class="input input-sm w-40 flex items-center gap-2">
-                  <span class="text-base-content/40 text-xs shrink-0">To</span>
-                  <input type="date" class="grow min-w-0" aria-label="Uploaded to" [value]="toDate() ?? ''"
-                    (change)="setToDate($event)" />
-                </label>
-
-                <div class="dropdown dropdown-end">
-                  <div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
-                    Presets
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                  <ul tabindex="0"
-                    class="menu menu-sm dropdown-content bg-base-100 rounded-box z-20 mt-2 w-44 p-2 shadow border border-base-300">
-                    <li><button type="button" (click)="setDatePreset('today')">Today</button></li>
-                    <li><button type="button" (click)="setDatePreset('7d')">Last 7 days</button></li>
-                    <li><button type="button" (click)="setDatePreset('30d')">Last 30 days</button></li>
-                    <li><button type="button" (click)="setDatePreset('year')">Last year</button></li>
-                    <li><button type="button" (click)="setDatePreset('all')">All time</button></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div class="hidden xl:block h-10 w-px bg-base-300"></div>
-
-            <!-- Sort -->
-            <div class="flex flex-col gap-1.5 xl:ml-auto">
-              <span class="text-xs font-medium uppercase tracking-wide text-base-content/50">Sort</span>
-              <select class="select select-sm w-40" aria-label="Sort order" [value]="sortOrder()"
-                (change)="setSortOrder($event)">
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="longest">Longest first</option>
-                <option value="shortest">Shortest first</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Active filter summary -->
-          @if (hasActiveFilters()) {
-          <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-base-300">
-            <span class="text-xs text-base-content/50">Filtering by</span>
-
-            @if (statusFilter() !== 'all') {
-            <span class="badge badge-sm badge-outline gap-1.5">
-              {{ statusLabel() }}
-              <button type="button" class="opacity-50 hover:opacity-100" aria-label="Clear status filter"
-                (click)="setStatusFilter('all')">&times;</button>
-            </span>
-            }
-
-            @if (fromDate() || toDate()) {
-            <span class="badge badge-sm badge-outline gap-1.5">
-              {{ fromDate() ? (fromDate() | date: 'MMM d, y') : 'Anytime' }}
-              &ndash;
-              {{ toDate() ? (toDate() | date: 'MMM d, y') : 'now' }}
-              <button type="button" class="opacity-50 hover:opacity-100" aria-label="Clear date filter"
-                (click)="setDatePreset('all')">&times;</button>
-            </span>
-            }
-
-            <button type="button" class="btn btn-ghost btn-xs ml-auto" (click)="clearFilters()">
-              Clear all
-            </button>
-          </div>
+    @else {
+    <ul>
+      @for (entry of visible(); track entry.id) {
+      <li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0 md:grid-cols-[auto_minmax(0,1fr)_auto]"
+        [class]="playingKey() === entry.objectKey ? '-mx-3 rounded-input bg-paper-2 px-3' : ''">
+        <div>
+          @if (playingKey() === entry.objectKey && isPlaying()) {
+          <button type="button" class="btn btn--primary btn--lg btn--icon" aria-label="Pause" (click)="pauseAudio()">
+            <app-icon name="pause" [size]="20" />
+          </button>
+          } @else {
+          <button type="button" class="btn btn--lg btn--icon" aria-label="Play" (click)="playAudio(entry.objectKey)">
+            <app-icon name="play" [size]="20" />
+          </button>
           }
         </div>
-      </div>
 
-      <!-- Results -->
-      <div class="card bg-base-100 shadow-xl border border-base-300">
-        <div class="card-body p-0">
-
-          <!-- Result count -->
-          <div class="flex items-center justify-between px-5 py-3 border-b border-base-300">
-            <h2 class="text-sm font-medium text-base-content/70">
-              @if (loading()) {
-              Loading recordings...
-              } @else if (entries().length === 0) {
-              No recordings
-              } @else {
-              Showing <span class="font-mono text-base-content">{{ rangeStart() }}&ndash;{{ rangeEnd() }}</span>
-              of <span class="font-mono text-base-content">{{ this.visible().length }}</span>
-              }
-            </h2>
-            <span class="text-xs text-base-content/40">{{ pageSize }} per page</span>
-          </div>
-
-          <!-- Loading skeletons -->
-          @if (loading()) {
-          <div class="divide-y divide-base-300">
-            @for (row of [1, 2, 3, 4, 5, 6]; track row) {
-            <div class="flex items-center gap-4 px-5 py-4">
-              <div class="skeleton h-12 w-12 shrink-0 rounded-full"></div>
-              <div class="flex-1 space-y-2">
-                <div class="skeleton h-4 w-1/3"></div>
-                <div class="skeleton h-3 w-1/2"></div>
-              </div>
-              <div class="skeleton h-6 w-24 shrink-0 rounded-full"></div>
-            </div>
+        <div class="grid min-w-0 gap-1">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h3 class="min-w-0 text-xl! break-words">{{ entry.title || entry.name }}</h3>
+            @if (entry.favorite) {
+            <span class="inline-flex text-accent" role="img" aria-label="Favorited">
+              <app-icon name="star" [size]="16" [filled]="true" />
+            </span>
             }
-          </div>
-          }
-
-          <!-- Empty state -->
-          @else if (entries().length === 0) {
-          <div class="flex flex-col items-center justify-center text-center px-6 py-20 gap-4">
-            <div class="rounded-full bg-base-200 p-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-base-content/30" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1M12 18v4m-4 0h8" />
-              </svg>
-            </div>
-            @if (hasActiveFilters()) {
-            <div>
-              <p class="font-semibold">No recordings match these filters</p>
-              <p class="text-sm text-base-content/60 mt-1">Try widening the date range or clearing the status filter.
-              </p>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline" (click)="clearFilters()">Clear filters</button>
+            @if (entry.transcribed === 0) {
+            <span class="tag tag--done">Transcribed</span>
+            } @else if (entry.transcribed === 1) {
+            <span class="tag tag--pending">Processing</span>
             } @else {
+            <span class="tag tag--none">No transcript</span>
+            }
+          </div>
+
+          <p class="line-clamp-1 max-w-[65ch] text-ink-2">{{ entry.description || 'No description' }}</p>
+          @if (entry.transcribed === TranscriptionStatus.Transcribed) {
+          <p class="line-clamp-2 max-w-[65ch] text-muted">
+            {{ entry.wordCount > 200 ? entry.transcription + '…' : entry.transcription }}
+          </p>
+          }
+
+          <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
             <div>
-              <p class="font-semibold">Nothing recorded yet</p>
-              <p class="text-sm text-base-content/60 mt-1">Your entries will show up here once you record one.</p>
+              <dt class="sr-only">Recorded</dt>
+              <dd>
+                {{ entry.created ?? entry.uploaded | date: 'MMM d, y' }} at {{ entry.created ?? entry.uploaded | date: 'h:mm a' }}
+              </dd>
             </div>
-            <a class="btn btn-sm btn-primary" [routerLink]="['/dashboard']" fragment="record">Record your first
-              entry</a>
-            }
-          </div>
-          }
-
-          <!-- Recording rows -->
-          @else {
-          <ul class="divide-y divide-base-300">
-            @for (entry of visible(); track entry.id) {
-            <li class="group relative px-5 py-4 transition-colors hover:bg-base-200/60">
-
-              <!-- Active playback accent -->
-              @if (playingKey() === entry.objectKey) {
-              <span class="absolute inset-0 bg-primary/5 pointer-events-none" aria-hidden="true"></span>
-              <span class="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden="true"></span>
-              }
-
-              <div class="relative flex items-start gap-4">
-
-                <!-- Play / pause with progress ring -->
-                <div class="relative shrink-0 pt-0.5">
-                  @if (playingKey() === entry.objectKey && isPlaying()) {
-                  <button type="button"
-                    class="btn btn-circle btn-sm h-12 w-12 btn-primary shadow-md transition-transform hover:scale-105"
-                    aria-label="Pause" (click)="pauseAudio()">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
-                    </svg>
-                  </button>
-                  } @else {
-                  <button type="button"
-                    class="btn btn-circle btn-sm h-12 w-12 btn-ghost bg-base-200 text-base-content/70 transition-all hover:bg-primary hover:text-primary-content hover:scale-105"
-                    aria-label="Play" (click)="playAudio(entry.objectKey)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-0.5" fill="currentColor"
-                      viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
-                  }
-                </div>
-
-                <!-- Details -->
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="font-semibold truncate">{{ entry.title || entry.name }}</h3>
-
-                    @if (entry.favorite) {
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-warning" fill="currentColor"
-                      viewBox="0 0 24 24" aria-label="Favorited">
-                      <path
-                        d="M11.48 3.5a.56.56 0 011.04 0l2.13 5.11a.56.56 0 00.47.35l5.52.44c.5.04.7.66.32.99l-4.2 3.6a.56.56 0 00-.18.56l1.28 5.39a.56.56 0 01-.84.61l-4.73-2.89a.56.56 0 00-.58 0l-4.73 2.89a.56.56 0 01-.84-.61l1.28-5.39a.56.56 0 00-.18-.56l-4.2-3.6a.56.56 0 01.32-.99l5.52-.44a.56.56 0 00.47-.35L11.48 3.5z" />
-                    </svg>
-                    }
-
-                    @if (entry.transcribed === 0) {
-                    <span class="badge badge-sm badge-success badge-soft gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="3">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Transcribed
-                    </span>
-                    } @else if (entry.transcribed === 1) {
-                    <span class="badge badge-sm badge-warning badge-soft gap-1">
-                      <span class="loading loading-spinner loading-xs"></span>
-                      Processing
-                    </span>
-                    } @else {
-                    <span class="badge badge-sm badge-ghost">No transcript</span>
-                    }
-                  </div>
-
-                  <p class="text-sm text-base-content/60 mt-0.5 line-clamp-1">
-                    {{ entry.description || 'No description' }}
-                  </p>
-                  @if (entry.transcribed === TranscriptionStatus.Transcribed) {
-                  <p class="text-sm text-base-content/60 mt-0.5 line-clamp-1">
-                    Transcription: {{ entry.wordCount > 200 ? entry.transcription + '...' : entry.transcription }}
-                  </p>
-                  }
-
-                  <!-- Metadata -->
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-base-content/50">
-                    <span class="inline-flex items-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {{ entry.created ?? entry.uploaded | date: 'MMM d, y' }}
-                      <span class="text-base-content/30">at</span>
-                      {{ entry.created ?? entry.uploaded | date: 'h:mm a' }}
-                    </span>
-
-                    <span class="inline-flex items-center gap-1.5 font-mono">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {{ (entry.secLength * 1000) | date: 'HH:mm:ss':'UTC' }}
-                    </span>
-
-                    <span class="inline-flex items-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H6a2 2 0 00-2 2z" />
-                      </svg>
-                      {{ (entry.sizeInBytes / 1048576).toFixed(1) }} MB
-                    </span>
-                  </div>
-                  <div [id]="entry.objectKey" class="border-white mt-1"></div>
-
-                  <!-- Seek bar, only for the entry being played -->
-                  @if (playingKey() === entry.objectKey) {
-                  <div class="flex items-center gap-3 mt-3">
-                    <span class="text-xs font-mono text-base-content/60 tabular-nums w-12 shrink-0">
-                      {{ currentTime() | formatDuration }}
-                    </span>
-                    <span class="text-xs font-mono text-base-content/40 tabular-nums w-12 shrink-0 text-right">
-                      {{ duration() | formatDuration}}
-                    </span>
-                  </div>
-                  }
-                </div>
-
-                <!-- Actions -->
-                <div
-                  class="flex shrink-0 items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
-                  <button type="button" class="btn btn-ghost btn-sm btn-circle" title="Favorite" aria-label="Favorite"
-                    (click)="favorite(entry.id)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning"
-                      [style.fill]="entry.favorite ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor"
-                      stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M11.48 3.5a.56.56 0 011.04 0l2.13 5.11a.56.56 0 00.47.35l5.52.44c.5.04.7.66.32.99l-4.2 3.6a.56.56 0 00-.18.56l1.28 5.39a.56.56 0 01-.84.61l-4.73-2.89a.56.56 0 00-.58 0l-4.73 2.89a.56.56 0 01-.84-.61l1.28-5.39a.56.56 0 00-.18-.56l-4.2-3.6a.56.56 0 01.32-.99l5.52-.44a.56.56 0 00.47-.35L11.48 3.5z" />
-                    </svg>
-                  </button>
-
-                  <button type="button" class="btn btn-ghost btn-sm btn-circle" title="Download" aria-label="Download"
-                    (click)="download(entry.objectKey, entry.fileName)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                    </svg>
-                  </button>
-
-                  <button type="button" class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
-                    title="Delete" aria-label="Delete" (click)="delete(entry.objectKey)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M19 7l-.87 12.14A2 2 0 0116.14 21H7.86a2 2 0 01-1.99-1.86L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </li>
-            }
-          </ul>
-
-          <!-- Pagination -->
-          @if (totalPages() > 1) {
-          <div class="flex items-center justify-between gap-4 px-5 py-4 border-t border-base-300">
-            <p class="text-xs text-base-content/50 hidden sm:block">
-              Page <span class="font-mono">{{ page() + 1 }}</span> of <span class="font-mono">{{ totalPages() }}</span>
-            </p>
-
-            <div class="join mx-auto sm:mx-0">
-              <button type="button" class="btn btn-sm join-item" aria-label="First page" [disabled]="page() === 0"
-                (click)="goToPage(0)">
-                &laquo;
-              </button>
-              <button type="button" class="btn btn-sm join-item gap-1" [disabled]="page() === 0" (click)="prevPage()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-                Prev
-              </button>
-              <button type="button" class="btn btn-sm join-item pointer-events-none font-mono">
-                {{ page() + 1 }} / {{ totalPages() }}
-              </button>
-              <button type="button" class="btn btn-sm join-item gap-1" [disabled]="page() + 1 >= totalPages()"
-                (click)="nextPage()">
-                Next
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <button type="button" class="btn btn-sm join-item" aria-label="Last page"
-                [disabled]="page() + 1 >= totalPages()" (click)="goToPage(totalPages() - 1)">
-                &raquo;
-              </button>
+            <div>
+              <dt class="sr-only">Length</dt>
+              <dd class="num">{{ (entry.secLength * 1000) | date: 'HH:mm:ss':'UTC' }}</dd>
             </div>
+            <div>
+              <dt class="sr-only">Size</dt>
+              <dd class="num">{{ (entry.sizeInBytes / 1048576).toFixed(1) }}&nbsp;MB</dd>
+            </div>
+          </dl>
+
+          <div [id]="entry.objectKey" class="not-empty:mt-3"></div>
+
+          @if (playingKey() === entry.objectKey) {
+          <div class="flex justify-between">
+            <span class="num text-sm text-muted">{{ currentTime() | formatDuration }}</span>
+            <span class="num text-sm text-muted">{{ duration() | formatDuration }}</span>
           </div>
-          }
           }
         </div>
-      </div>
-    </main>
-  </div>
 
-  <!-- Sidebar -->
-  <div class="drawer-side z-40">
-    <label for="dashboard-drawer" aria-label="Close menu" class="drawer-overlay"></label>
-    <app-sidebar></app-sidebar>
-  </div>
-</div>
+        <div class="col-start-2 -ml-3 flex gap-0.5 md:col-start-auto md:ml-0">
+          <button type="button" class="btn btn--quiet btn--icon" [class.text-accent]="entry.favorite" title="Favorite"
+            aria-label="Favorite" [attr.aria-pressed]="entry.favorite" (click)="favorite(entry.id)">
+            <app-icon name="star" [size]="20" [filled]="entry.favorite" />
+          </button>
+          <button type="button" class="btn btn--quiet btn--icon" title="Download" aria-label="Download"
+            (click)="download(entry.objectKey, entry.fileName)">
+            <app-icon name="download" [size]="20" />
+          </button>
+          <button type="button" class="btn btn--quiet btn--icon btn--danger" title="Delete" aria-label="Delete"
+            (click)="delete(entry.objectKey)">
+            <app-icon name="trash" [size]="20" />
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
+
+    @if (totalPages() > 1) {
+    <nav class="flex flex-wrap items-center justify-between gap-4 pt-6" aria-label="Pages">
+      <p class="text-sm font-medium text-muted">Page <span class="num">{{ page() + 1 }}</span> of <span class="num">{{ totalPages() }}</span></p>
+      <div class="seg">
+        <button type="button" aria-label="First page" [disabled]="page() === 0" (click)="goToPage(0)">First</button>
+        <button type="button" [disabled]="page() === 0" (click)="prevPage()">Previous</button>
+        <button type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Next</button>
+        <button type="button" aria-label="Last page" [disabled]="page() + 1 >= totalPages()"
+          (click)="goToPage(totalPages() - 1)">Last</button>
+      </div>
+    </nav>
+    }
+    }
+  </section>
+</app-shell>

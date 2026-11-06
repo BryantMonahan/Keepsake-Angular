@@ -6,12 +6,11 @@ import { DataService } from '../../../services/data-service';
   selector: 'app-weekly-streak',
   imports: [],
   templateUrl: './weekly-streak.html',
-  styleUrl: './weekly-streak.css',
 })
 export class WeeklyStreak {
   private Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
   private dataService = inject(DataService)
-  days = signal<{ day: string; active: boolean }[]>([])
+  days = signal<{ day: string; dow: number; active: boolean }[]>([])
   numOfEntriesText = signal("No entries")
   updateData = effect(async () => {
     this.dataService.entriesChanged()
@@ -28,11 +27,11 @@ export class WeeklyStreak {
     console.log("HERE", weeklyStreakRes)
     const day = new Date()
     let activeDays = 0
-    const days: { day: string; active: boolean }[] = []
+    const days: { day: string; dow: number; active: boolean }[] = []
     for (const active of weeklyStreakRes.data) {
       if (active) activeDays++
-      days.push({ day: this.Days[day.getDay()][0], active })
-      day.setTime(day.getTime() - 86400000)
+      days.push({ day: this.Days[day.getDay()][0], dow: day.getDay(), active })
+      day.setDate(day.getDate() - 1)
     }
     // flip it so Today is on the right
     days.reverse()

@@ -1,42 +1,43 @@
-<div class="navbar bg-base-100 border-b border-base-300 px-4 lg:px-6 sticky top-0 z-30 gap-2">
-  <div class="flex-none lg:hidden">
-    <label for="dashboard-drawer" class="btn btn-square btn-ghost" aria-label="Open menu">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+<header class="flex min-h-(--bar) items-center gap-3 border-b border-rule bg-paper px-(--gutter)">
+  <label for="dashboard-drawer" aria-label="Open menu"
+    class="btn btn--quiet btn--icon drawer-focus:outline-2 drawer-focus:outline-offset-2 drawer-focus:outline-focus lg:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </label>
+
+  <div class="min-w-0 flex-1">
+    <label class="relative block w-full max-w-[420px]">
+      <span class="sr-only">Search entries</span>
+      <svg class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg"
+        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
       </svg>
+      <input type="search" class="input pl-10 text-md sm:text-sm" placeholder="Search entries, transcripts…" />
     </label>
   </div>
 
-  <div class="flex-1">
-    <label class="input hidden md:flex items-center gap-2 w-full max-w-xs">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+  <div class="flex items-center gap-1">
+    <button type="button" class="btn btn--quiet btn--icon" aria-label="Notifications">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
       </svg>
-      <input type="search" class="grow" placeholder="Search entries, transcripts..." />
-    </label>
-  </div>
-
-  <div class="flex-none flex items-center gap-1">
-    <button type="button" class="btn btn-ghost btn-circle" aria-label="Notifications">
-      <div class="indicator">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        <span class="badge badge-xs badge-primary indicator-item"></span>
-      </div>
     </button>
 
-    <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
-        <div class="bg-primary text-primary-content w-9 rounded-full">
-          <span class="text-sm">BM</span>
-        </div>
-      </div>
-      <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow border border-base-300">
-        <li><a>Profile</a></li>
-        <li><a>Account settings</a></li>
-        <li><a>Sign out</a></li>
+    <details class="menu">
+      <summary class="btn btn--quiet btn--icon rounded-pill" aria-label="Account menu">
+        <span class="inline-grid size-8 place-items-center rounded-pill bg-accent-soft text-xs font-medium text-ink" aria-hidden="true">BM</span>
+      </summary>
+      <ul class="menu__list">
+        <li><a class="menu__item">Profile</a></li>
+        <li><a class="menu__item">Account settings</a></li>
+        <li><a class="menu__item">Sign out</a></li>
       </ul>
-    </div>
+    </details>
   </div>
-</div>
+</header>

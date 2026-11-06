@@ -7,13 +7,13 @@ import { AudioRecordingService } from '../../../services/audio-recording-service
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { FormatDurationPipe } from '../../../pipes/format-duration-pipe';
 import { form, required, FormField } from '@angular/forms/signals';
+import { Icon } from '../../../helpers/icon/icon';
 
 
 @Component({
   selector: 'app-voice-recorder',
-  imports: [FormatDurationPipe, FormField],
+  imports: [FormatDurationPipe, FormField, Icon],
   templateUrl: './voice-recorder.html',
-  styleUrl: './voice-recorder.css',
 })
 export class VoiceRecorder implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>

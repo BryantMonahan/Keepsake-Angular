@@ -1,26 +1,46 @@
-<div class="flex justify-center items-center h-screen">
-    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-        <legend class="fieldset-legend text-xl">Login</legend>
+<div class="flex min-h-dvh flex-col bg-paper">
+  <header class="flex min-h-(--bar) items-center border-b border-rule px-(--gutter)">
+    <a class="wordmark text-xl" routerLink="/" aria-label="MyTimeline home">MyTimeline</a>
+  </header>
 
-        <label class="label text-lg">Username</label>
-        <input type="username" class="input" placeholder="Username" [formField]="loginForm.username" />
-        @if (loginForm.username().touched() && loginForm.username().invalid()) {
-        <ul>
-            @for (error of loginForm.username().errors(); track $index) {
-            <li>{{ error.message }}</li>
-            }
-        </ul>
-        }
+  <main class="mx-auto grid w-full max-w-(--container) flex-1 grid-cols-1 content-center gap-16 px-(--gutter) pt-16 pb-24
+    lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-24">
+    <div class="grid content-start gap-4">
+      <h1 class="max-w-[18ch] text-display-s">Log in</h1>
+      <p class="max-w-[52ch] text-lg leading-snug text-ink-2">Your recordings are where you left them.</p>
+      <p>No account yet? <a class="link" routerLink="/register">Create one</a></p>
+    </div>
 
-        <label class="label text-lg">Password</label>
-        <input type="password" class="input" placeholder="Password" [formField]="loginForm.password">
-        @if (loginForm.password().touched() && loginForm.password().invalid()) {
-        <ul>
-            @for (error of loginForm.password().errors(); track $index) {
-            <li>{{ error.message }}</li>
-            }
+    <fieldset class="grid min-w-0 gap-2 rounded-card bg-surface p-10 shadow-lift">
+      <legend class="sr-only">Login</legend>
+
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="login-username" class="text-sm text-ink">Username</label>
+        <input id="login-username" type="username" class="input min-h-13" placeholder="Username" autocomplete="username"
+          [formField]="loginForm.username" />
+        <ul class="min-h-lh text-sm font-medium text-error">
+          @if (loginForm.username().touched() && loginForm.username().invalid()) {
+          @for (error of loginForm.username().errors(); track $index) {
+          <li>{{ error.message }}</li>
+          }
+          }
         </ul>
-        }
-        <button class="btn btn-neutral mt-4" (click)="login()">Login</button>
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="login-password" class="text-sm text-ink">Password</label>
+        <input id="login-password" type="password" class="input min-h-13" placeholder="Password"
+          autocomplete="current-password" [formField]="loginForm.password">
+        <ul class="min-h-lh text-sm font-medium text-error">
+          @if (loginForm.password().touched() && loginForm.password().invalid()) {
+          @for (error of loginForm.password().errors(); track $index) {
+          <li>{{ error.message }}</li>
+          }
+          }
+        </ul>
+      </div>
+
+      <button type="button" class="btn btn--primary btn--lg mt-3" (click)="login()">Log in</button>
     </fieldset>
+  </main>
 </div>

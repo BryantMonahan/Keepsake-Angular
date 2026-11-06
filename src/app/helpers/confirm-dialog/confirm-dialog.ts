@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Icon } from '../icon/icon';
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [],
+  imports: [Icon],
   templateUrl: './confirm-dialog.html',
-  styleUrl: './confirm-dialog.css',
 })
 export class ConfirmDialog {
   private dialogRef = inject<MatDialogRef<ConfirmDialog, boolean>>(MatDialogRef)

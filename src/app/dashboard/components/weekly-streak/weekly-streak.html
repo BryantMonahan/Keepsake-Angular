@@ -1,19 +1,15 @@
-<div class="card bg-base-100 shadow-xl border border-base-300">
-  <div class="card-body">
-    <h2 class="card-title text-base">Past 7 Days</h2>
-    <div class="flex justify-between mt-2">
-      @for (day of days(); track $index) {
-      <div class="flex flex-col items-center gap-1">
-        <span class="text-xs" [class]="$last ? 'text-warning mx-0' : 'text-base-content/50'">{{
-          day.day }}</span>
-        @if (day.active) {
-        <span class="w-2 h-2 rounded-full bg-success"></span>
-        } @else {
-        <span class="w-2 h-2 rounded-full bg-base-300"></span>
-        }
-      </div>
-      }
-    </div>
-    <p class="text-xs text-base-content/50 mt-3"> {{ numOfEntriesText() }} logged so far this week</p>
-  </div>
-</div>
+<section class="card" aria-labelledby="week-title">
+  <h2 id="week-title">Past 7 days</h2>
+  <ol class="mt-6 grid grid-cols-7 gap-2">
+    @for (day of days(); track $index) {
+    <li class="grid justify-items-center gap-2">
+      <!-- a recorded day fills with its own colour; an empty one stays an outline -->
+      <span class="aspect-square w-full max-w-9 rounded-input"
+        [class]="'tint-' + day.dow + (day.active ? ' plastic' : ' border-[1.5px] border-dashed border-rule-2')" aria-hidden="true"></span>
+      <span class="text-sm" [class]="$last ? 'font-medium text-ink' : 'text-muted'">{{ day.day }}</span>
+      <span class="sr-only">{{ day.active ? 'recorded' : 'nothing recorded' }}</span>
+    </li>
+    }
+  </ol>
+  <p class="mt-4 text-sm text-muted">{{ numOfEntriesText() }} logged in the past 7 days</p>
+</section>

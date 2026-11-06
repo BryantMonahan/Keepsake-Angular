@@ -1,1 +1,13 @@
-<p>page-not-found works!</p>
+<div class="flex min-h-dvh flex-col bg-paper">
+  <header class="flex min-h-(--bar) items-center border-b border-rule px-(--gutter)">
+    <a class="wordmark text-xl" routerLink="/" aria-label="MyTimeline home">MyTimeline</a>
+  </header>
+  <main class="mx-auto flex w-full max-w-(--container) flex-1 flex-col justify-center gap-6 px-(--gutter) pt-16 pb-24">
+    <h1 class="max-w-[18ch] text-display-s">This page isn’t on the timeline</h1>
+    <p class="max-w-[52ch] text-lg leading-snug text-ink-2">The address may be mistyped, or the page has moved.</p>
+    <div class="flex flex-wrap gap-3">
+      <a class="btn btn--primary btn--lg" routerLink="/dashboard">Go to your dashboard</a>
+      <a class="btn btn--lg" routerLink="/">Home</a>
+    </div>
+  </main>
+</div>

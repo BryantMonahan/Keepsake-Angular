@@ -1,12 +1,12 @@
 import { Component, computed, signal } from '@angular/core';
 import { email, form, FormField, minLength, required, validate } from '@angular/forms/signals';
 import axios from 'axios';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-register',
-  imports: [FormField],
-  templateUrl: './register.html',
-  styleUrl: './register.css',
+  imports: [FormField, RouterLink],
+  templateUrl: './register.html'
 })
 export class Register {
   registerModel = signal<{ username: string; email: string; password: string; confirmPassword: string }>({

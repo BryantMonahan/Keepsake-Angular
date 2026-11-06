@@ -2,8 +2,8 @@ import { TranscriptionStatus } from './../Types/transcription-status';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Topbar } from '../dashboard/components/topbar/topbar';
-import { Sidebar } from '../dashboard/components/sidebar/sidebar';
+import { AppShell } from '../helpers/app-shell/app-shell';
+import { CHIP_X } from '../helpers/ui-classes';
 import { JournalEntry } from '../Types/journal-entry';
 import { AlertService } from '../services/alert-service';
 import { DataService } from '../services/data-service';
@@ -13,6 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import axios from 'axios';
 import WaveSurfer from 'wavesurfer.js'
 import { FormatDurationPipe } from '../pipes/format-duration-pipe';
+import { Icon } from '../helpers/icon/icon';
+import { themeColor } from '../helpers/theme-color';
 
 
 export type StatusFilter = 'all' | 'transcribed' | 'processing' | 'none';
@@ -21,9 +23,8 @@ export type DatePreset = 'today' | '7d' | '30d' | 'year' | 'all';
 
 @Component({
   selector: 'app-recordings',
-  imports: [Topbar, Sidebar, RouterLink, DatePipe, FormatDurationPipe],
+  imports: [AppShell, RouterLink, DatePipe, FormatDurationPipe, Icon],
   templateUrl: './recordings.html',
-  styleUrl: './recordings.css',
 })
 export class Recordings implements OnInit {
   private alertService = inject(AlertService)
@@ -32,6 +33,7 @@ export class Recordings implements OnInit {
   private route = inject(ActivatedRoute)
 
   TranscriptionStatus = TranscriptionStatus
+  readonly chipX = CHIP_X
   waveSurfer = signal<WaveSurfer | null>(null)
   providedId = signal<string | null>(null)
 
@@ -227,8 +229,12 @@ export class Recordings implements OnInit {
       console.log(document.getElementById(objectKey)) // null so wavesurfer doesn't have a container to build into
       this.waveSurfer.set(WaveSurfer.create({
         container: document.getElementById(objectKey)!,
-        waveColor: 'rgb(200, 0, 200)',
-        progressColor: 'rgb(100, 0, 100)',
+        waveColor: themeColor('--color-rule-2'),
+        progressColor: themeColor('--color-ink'),
+        cursorColor: themeColor('--color-accent'),
+        height: 56,
+        barWidth: 2,
+        barGap: 2,
         url: urlRes.data,
         dragToSeek: true,
       }))

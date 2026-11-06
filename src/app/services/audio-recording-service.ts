@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import WaveSurfer from 'wavesurfer.js';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js'
+import { themeColor } from '../helpers/theme-color';
 
 @Injectable({
   providedIn: 'root',
@@ -27,8 +28,8 @@ export class AudioRecordingService {
     try {
       this.waveSurfer.set(WaveSurfer.create({
         container,
-        waveColor: '#4F4A85',
-        progressColor: '#383351',
+        waveColor: themeColor('--color-ink-2'),
+        progressColor: themeColor('--color-ink'),
         interact: false,
         height: 96,
         cursorWidth: 0

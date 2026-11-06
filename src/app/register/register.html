@@ -1,86 +1,84 @@
-<div class="card bg-base-200 w-full max-w-md shadow-xl mx-auto">
-    <div class="card-body">
-        <h2 class="card-title">Create your account</h2>
+<div class="flex min-h-dvh flex-col bg-paper">
+  <header class="flex min-h-(--bar) items-center border-b border-rule px-(--gutter)">
+    <a class="wordmark text-xl" routerLink="/" aria-label="MyTimeline home">MyTimeline</a>
+  </header>
 
-        <form (submit)="onSubmit(); $event.preventDefault()" class="flex flex-col gap-4">
-            <!-- Email -->
-            <div class="form-control w-full">
-                <label class="label" for="email">
-                    <span class="label-text font-semibold">Email</span>
-                </label>
-                <input id="email" type="email" [formField]="registerForm.email" class="input input-bordered w-full"
-                    placeholder="you@example.com" />
-                @if (registerForm.email().touched() && registerForm.email().invalid()) {
-                <div class="mt-1">
-                    @for (error of registerForm.email().errors(); track error.kind) {
-                    <span class="label-text-alt text-error block">{{ error.message }}</span>
-                    }
-                </div>
-                }
-            </div>
-
-            <!-- Username -->
-            <div class="form-control w-full">
-                <label class="label" for="email">
-                    <span class="label-text font-semibold">Username</span>
-                </label>
-                <input id="username" type="text" [formField]="registerForm.username" class="input input-bordered w-full"
-                    placeholder="username" />
-                @if (registerForm.username().touched() && registerForm.username().invalid()) {
-                <div class="mt-1">
-                    @for (error of registerForm.username().errors(); track error.kind) {
-                    <span class="label-text-alt text-error block">{{ error.message }}</span>
-                    }
-                </div>
-                }
-            </div>
-
-            <!-- Password -->
-            <div class="form-control w-full">
-                <label class="label" for="password">
-                    <span class="label-text font-semibold">Password</span>
-                </label>
-                <input id="password" type="password" [formField]="registerForm.password"
-                    class="input input-bordered w-full" placeholder="At least 8 characters" />
-                <!-- Watching changes: live strength meter driven by a computed() -->
-                @if (registerForm.password().value().length > 0) {
-                <div class="mt-2">
-                    <progress class="progress w-full" [class.progress-error]="passwordStrength() <= 1"
-                        [class.progress-warning]="passwordStrength() === 2"
-                        [class.progress-success]="passwordStrength() >= 3" [value]="passwordStrength()"
-                        max="4"></progress>
-                    <span class="label-text-alt opacity-70">Strength: {{ strengthLabel() }}</span>
-                </div>
-                }
-                @if (registerForm.password().touched() && registerForm.password().invalid()) {
-                <div class="mt-1">
-                    @for (error of registerForm.password().errors(); track error.kind) {
-                    <span class="label-text-alt text-error block">{{ error.message }}</span>
-                    }
-                </div>
-                }
-            </div>
-
-            <!-- Confirm password (cross-field) -->
-            <div class="form-control w-full">
-                <label class="label" for="confirmPassword">
-                    <span class="label-text font-semibold">Confirm password</span>
-                </label>
-                <input id="confirmPassword" type="password" [formField]="registerForm.confirmPassword"
-                    class="input input-bordered w-full" placeholder="Repeat your password" />
-                @if (registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid()) {
-                <div class="mt-1">
-                    @for (error of registerForm.confirmPassword().errors(); track error.kind) {
-                    <span class="label-text-alt text-error block">{{ error.message }}</span>
-                    }
-                </div>
-                }
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="registerForm().invalid()">
-                Register
-            </button>
-        </form>
-
+  <main class="mx-auto grid w-full max-w-(--container) flex-1 grid-cols-1 content-center gap-16 px-(--gutter) pt-16 pb-24
+    lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-24">
+    <div class="grid content-start gap-4">
+      <h1 class="max-w-[18ch] text-display-s">Create your account</h1>
+      <p class="max-w-[52ch] text-lg leading-snug text-ink-2">Start a timeline of your days.</p>
+      <p>Already have an account? <a class="link" routerLink="/login">Log in</a></p>
     </div>
+
+    <form class="grid min-w-0 gap-2 rounded-card bg-surface p-10 shadow-lift" (submit)="onSubmit(); $event.preventDefault()">
+      <!-- Email -->
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="email" class="text-sm text-ink">Email</label>
+        <input id="email" type="email" [formField]="registerForm.email" class="input min-h-13" autocomplete="email"
+          placeholder="you@example.com" />
+        <div class="min-h-lh text-sm font-medium text-error">
+          @if (registerForm.email().touched() && registerForm.email().invalid()) {
+          @for (error of registerForm.email().errors(); track error.kind) {
+          <span class="block">{{ error.message }}</span>
+          }
+          }
+        </div>
+      </div>
+
+      <!-- Username -->
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="username" class="text-sm text-ink">Username</label>
+        <input id="username" type="text" [formField]="registerForm.username" class="input min-h-13"
+          autocomplete="username" placeholder="username" />
+        <div class="min-h-lh text-sm font-medium text-error">
+          @if (registerForm.username().touched() && registerForm.username().invalid()) {
+          @for (error of registerForm.username().errors(); track error.kind) {
+          <span class="block">{{ error.message }}</span>
+          }
+          }
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="password" class="text-sm text-ink">Password</label>
+        <input id="password" type="password" [formField]="registerForm.password" class="input min-h-13"
+          autocomplete="new-password" placeholder="At least 8 characters" />
+        <!-- Watching changes: live strength meter driven by a computed() -->
+        @if (registerForm.password().value().length > 0) {
+        <div class="mt-1 grid gap-1">
+          <progress class="meter" [class.text-error]="passwordStrength() <= 1" [class.text-muted]="passwordStrength() === 2"
+            [class.text-accent]="passwordStrength() >= 3" [value]="passwordStrength()" max="4"></progress>
+          <span class="text-sm font-medium text-muted">Strength: {{ strengthLabel() }}</span>
+        </div>
+        }
+        <div class="min-h-lh text-sm font-medium text-error">
+          @if (registerForm.password().touched() && registerForm.password().invalid()) {
+          @for (error of registerForm.password().errors(); track error.kind) {
+          <span class="block">{{ error.message }}</span>
+          }
+          }
+        </div>
+      </div>
+
+      <!-- Confirm password (cross-field) -->
+      <div class="flex min-w-0 flex-col gap-2">
+        <label for="confirmPassword" class="text-sm text-ink">Confirm password</label>
+        <input id="confirmPassword" type="password" [formField]="registerForm.confirmPassword" class="input min-h-13"
+          autocomplete="new-password" placeholder="Repeat your password" />
+        <div class="min-h-lh text-sm font-medium text-error">
+          @if (registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid()) {
+          @for (error of registerForm.confirmPassword().errors(); track error.kind) {
+          <span class="block">{{ error.message }}</span>
+          }
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--lg mt-3" [disabled]="registerForm().invalid()">
+        Register
+      </button>
+    </form>
+  </main>
 </div>

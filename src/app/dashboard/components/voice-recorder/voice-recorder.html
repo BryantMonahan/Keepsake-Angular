@@ -1,153 +1,111 @@
-<div class="card bg-base-100 shadow-xl border border-base-300">
-  <div class="card-body">
-    <h2 class="card-title">New voice memo</h2>
-    <p class="text-sm text-base-content/60">Record here, or upload an existing audio file.</p>
+<section class="card flex flex-col gap-6" aria-labelledby="recorder-title">
+  <div class="flex flex-wrap items-baseline justify-between gap-4">
+    <h2 id="recorder-title">New voice memo</h2>
+    <p class="text-muted">Record here, or upload an existing audio file.</p>
+  </div>
 
-    <!-- Record visual -->
-    <div class="flex flex-col items-center gap-5 px-4 py-8 bg-base-200 rounded-box mt-4">
-      <div class="relative w-full h-24">
-        <div #waveform id="recorder" class="absolute inset-0"></div>
-
-        @if (recordingState() === 'inactive') {
-        <div class="absolute inset-0 flex items-center pointer-events-none">
-          <div class="h-px w-full bg-base-content/15"></div>
-        </div>
-        }
-      </div>
-
-      <!-- Timer + status -->
-      <div class="flex flex-col items-center gap-1">
-        <div class="text-3xl font-mono tabular-nums" [class.text-error]="recordingState() === 'recording'"
-          aria-live="off">
-          {{ secondsElapsed() | formatDuration }}
-        </div>
-        <div class="h-5 flex items-center gap-2 text-xs uppercase tracking-wide">
-          @switch (recordingState()) {
-          @case ('recording') {
-          <span class="relative flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
-          </span>
-          <span class="text-error font-semibold">Recording</span>
-          }
-          @case ('paused') {
-          <span class="inline-flex rounded-full h-2.5 w-2.5 bg-warning"></span>
-          <span class="text-warning font-semibold">Paused</span>
-          }
-          @default {
-          <span class="text-base-content/50">Tap to start recording</span>
-          }
-          }
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <div class="flex items-center gap-4">
-        @if (recordingState() === 'inactive') {
-        <button type="button" class="btn btn-circle btn-error btn-lg shadow-lg" aria-label="Start recording"
-          (click)="startRecording()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1M12 18v4m-4 0h8" />
-          </svg>
-        </button>
-        } @else {
-        <!-- Pause / resume -->
-        @if (recordingState() === 'recording') {
-        <button type="button" class="btn btn-circle btn-outline btn-lg" aria-label="Pause recording"
-          (click)="pauseRecording()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="5" width="4" height="14" rx="1" />
-            <rect x="14" y="5" width="4" height="14" rx="1" />
-          </svg>
-        </button>
-        } @else {
-        <button type="button" class="btn btn-circle btn-outline btn-lg" aria-label="Resume recording"
-          (click)="resumeRecording()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
-          </svg>
-        </button>
-        }
-
-        <!-- Stop -->
-        <button type="button" class="btn btn-circle btn-error btn-lg shadow-lg" aria-label="Stop recording"
-          (click)="stopRecording()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="6" width="12" height="12" rx="2" />
-          </svg>
-        </button>
-        }
-      </div>
-    </div>
-
-    <!-- Upload dropzone -->
-    @if(!showUpload()) {
-    <div class="divider">OR UPLOAD A FILE</div>
-    <div
-      class="border-2 border-dashed border-base-300 rounded-box p-8 text-center hover:border-primary transition-colors">
-      <input type="file" class="hidden" accept="audio/*" #fileInput (change)="onFileSelected($event)">
-
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-base-content/40" fill="none"
-        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M7 16a4 4 0 01-.88-7.9A5.5 5.5 0 0117 8.5a4.5 4.5 0 01-1 8.9M12 12v9m0-9l-3 3m3-3l3 3" />
-      </svg>
-      <p class="mt-2 text-sm text-base-content/60">Drag & drop an audio file, or</p>
-      <button type="button" class="btn btn-outline btn-primary btn-sm mt-3" (click)="fileInput.click()">Browse
-        files</button>
-      <p class="mt-2 text-xs text-base-content/40">MP3, WAV, M4A up to 100MB</p>
-    </div>
-    }
-
-    @if (showUpload() && !uploading()) {
-    <div class="alert bg-base-200 border border-base-300 mt-4 flex items-center justify-between">
-      <div class="flex items-center gap-2 min-w-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-primary" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 19V6l10-2v13M9 19a2 2 0 11-4 0 2 2 0 014 0zm10-2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        <span class="truncate">{{ file?.name }}</span>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button type="button" class="btn btn-primary btn-sm" (click)="uploadFile()">Upload</button>
-        <button type="button" class="btn btn-ghost btn-circle btn-sm text-error" aria-label="Remove file"
-          (click)="removeFile()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
-    }
-
-    @if (uploading()) {
-    <div class="mt-4">
-      <div class="flex items-center justify-between text-sm mb-1">
-        <span>Uploading {{ file?.name }}: {{ uploadPercentage() }}%</span>
-      </div>
-      <progress class="progress progress-primary w-full" [value]="uploadPercentage()" max="100"></progress>
-    </div>
-    }
-
-    @if (file) {
-    <div class="flex flex-col gap-3 mt-4">
-      <label for="title">Title</label>
-      <input type="text" class="input input-bordered w-full" placeholder="Title" [formField]="uploadFileForm.title">
-      @if (this.uploadFileForm.title().value() === "") {
-      <p class="text-red-500 italic">A title is required</p>
+  <!-- Record -->
+  <div class="grid justify-items-center gap-6 rounded-card bg-paper-2 px-6 py-10">
+    <div class="relative h-24 w-full">
+      <div #waveform id="recorder" class="absolute inset-0"></div>
+      @if (recordingState() === 'inactive') {
+      <div class="absolute inset-x-0 top-1/2 border-t-2 border-dashed border-rule-2" aria-hidden="true"></div>
       }
-      <label for="description">Description</label>
-      <textarea id="description" class="textarea textarea-bordered w-full min-h-24" placeholder="(optional)"
+    </div>
+
+    <div class="grid justify-items-center gap-1" [class.text-error]="recordingState() === 'recording'">
+      <div class="font-outlier text-3xl leading-none font-medium tabular-nums"
+        [class.text-ink]="recordingState() !== 'recording'" aria-live="off">{{ secondsElapsed() | formatDuration }}</div>
+      <p class="flex min-h-lh items-center gap-2 text-sm font-medium"
+        [class.text-muted]="recordingState() !== 'recording'" role="status">
+        @switch (recordingState()) {
+        @case ('recording') {
+        <span class="size-2.5 rounded-pill bg-error" aria-hidden="true"></span>
+        Recording
+        }
+        @case ('paused') { Paused }
+        @default { Tap to start recording }
+        }
+      </p>
+    </div>
+
+    <!-- the record and stop keys are round, the one place a control is -->
+    <div class="flex items-center gap-4">
+      @if (recordingState() === 'inactive') {
+      <button type="button" class="btn btn--primary btn--lg btn--icon min-h-18 w-18 rounded-pill" aria-label="Start recording"
+        (click)="startRecording()">
+        <app-icon name="mic" [size]="24" />
+      </button>
+      } @else {
+      @if (recordingState() === 'recording') {
+      <button type="button" class="btn btn--lg btn--icon rounded-pill" aria-label="Pause recording" (click)="pauseRecording()">
+        <app-icon name="pause" [size]="20" />
+      </button>
+      } @else {
+      <button type="button" class="btn btn--lg btn--icon rounded-pill" aria-label="Resume recording" (click)="resumeRecording()">
+        <app-icon name="play" [size]="20" />
+      </button>
+      }
+      <button type="button" class="btn btn--primary btn--lg btn--icon min-h-18 w-18 rounded-pill" aria-label="Stop recording"
+        (click)="stopRecording()">
+        <app-icon name="stop" [size]="20" />
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Upload -->
+  @if (!showUpload()) {
+  <p class="flex items-center gap-4 text-sm font-medium text-muted before:flex-1 before:border-t before:border-rule before:content-[''] after:flex-1 after:border-t after:border-rule after:content-['']">
+    Or upload a file
+  </p>
+  <div class="grid justify-items-center gap-3 rounded-card border-[1.5px] border-dashed border-rule-2 px-6 py-10 text-center text-muted">
+    <input type="file" class="sr-only" accept="audio/*" tabindex="-1" aria-hidden="true" #fileInput
+      (change)="onFileSelected($event)">
+    <app-icon name="upload" [size]="24" />
+    <p class="text-ink-2">Drag &amp; drop an audio file, or</p>
+    <button type="button" class="btn" (click)="fileInput.click()">Browse files</button>
+    <p class="text-sm font-medium">MP3, WAV, M4A up to 100&nbsp;MB</p>
+  </div>
+  }
+
+  @if (showUpload() && !uploading()) {
+  <div class="flex min-w-0 items-center gap-3 rounded-input bg-paper-2 px-4 py-3">
+    <app-icon name="audio-file" [size]="20" />
+    <span class="min-w-0 flex-1 truncate font-medium text-ink">{{ file?.name }}</span>
+    <button type="button" class="btn btn--primary" (click)="uploadFile()">Upload</button>
+    <button type="button" class="btn btn--quiet btn--icon btn--danger" aria-label="Remove file" (click)="removeFile()">
+      <app-icon name="x" [size]="20" />
+    </button>
+  </div>
+  }
+
+  @if (uploading()) {
+  <div class="grid gap-2">
+    <p class="text-sm font-medium text-muted">Uploading {{ file?.name }}: <span class="num">{{ uploadPercentage() }}%</span></p>
+    <progress class="meter" [value]="uploadPercentage()" max="100"></progress>
+  </div>
+  }
+
+  @if (file) {
+  <div class="grid gap-4">
+    <div class="flex min-w-0 flex-col gap-2">
+      <label for="title" class="text-sm text-ink">Title</label>
+      <input id="title" type="text" class="input" placeholder="Title" [formField]="uploadFileForm.title">
+      <p class="min-h-lh text-sm font-medium text-error">
+        @if (this.uploadFileForm.title().value() === "") { A title is required }
+      </p>
+    </div>
+    <div class="flex min-w-0 flex-col gap-2">
+      <label for="description" class="text-sm text-ink">Description</label>
+      <textarea id="description" class="input" placeholder="(optional)"
         [formField]="uploadFileForm.description"></textarea>
     </div>
-    }
-    <label class="label cursor-pointer justify-start gap-3 mt-5">
-      <input type="checkbox" class="toggle toggle-primary" #autoTranscribe unchecked />
-      <span class="label-text">Automatically transcribe this recording</span>
-    </label>
   </div>
-</div>
+  }
+
+  <label class="switch self-start">
+    <input type="checkbox" #autoTranscribe unchecked />
+    Automatically transcribe this recording
+  </label>
+</section>

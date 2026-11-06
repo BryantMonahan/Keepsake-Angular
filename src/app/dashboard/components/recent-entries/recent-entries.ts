@@ -7,12 +7,12 @@ import { MatDialog, MatDialogRef } from "@angular/material/dialog"
 import { ConfirmDialog } from '../../../helpers/confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
 import { form, FormField, required } from '@angular/forms/signals';
+import { Icon } from '../../../helpers/icon/icon';
 
 @Component({
   selector: 'app-recent-entries',
-  imports: [DatePipe, FormField],
+  imports: [DatePipe, FormField, Icon],
   templateUrl: './recent-entries.html',
-  styleUrl: './recent-entries.css',
 })
 export class RecentEntries implements OnInit, OnDestroy {
   private alertService = inject(AlertService)

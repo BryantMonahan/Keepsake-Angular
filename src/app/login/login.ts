@@ -1,15 +1,14 @@
 import { AuthService } from './../services/auth-service';
 import { Component, inject, signal } from '@angular/core';
 import { FormField, form, minLength, required } from '@angular/forms/signals';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import axios from 'axios';
 import { User } from '../Types/user';
 
 @Component({
   selector: 'app-login',
-  imports: [FormField],
-  templateUrl: './login.html',
-  styleUrl: './login.css',
+  imports: [FormField, RouterLink],
+  templateUrl: './login.html'
 })
 export class Login {
   private router = inject(Router)

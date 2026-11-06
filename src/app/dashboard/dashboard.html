@@ -1,41 +1,20 @@
-<div class="drawer lg:drawer-open bg-base-200 min-h-screen">
-    <input id="dashboard-drawer" type="checkbox" class="drawer-toggle" />
+<app-shell>
+  <header>
+    <time class="mb-2 block text-sm font-medium text-muted" [attr.datetime]="todayIso">{{ today | date: 'EEEE, MMMM d, y' }}</time>
+    <h1>Good {{ timeOfDay() }}, {{ username }}</h1>
+    <p class="mt-2 max-w-[52ch] text-lg leading-snug text-ink-2">Capture today’s thoughts before you forget them.</p>
+  </header>
 
-    <div class="drawer-content flex flex-col">
-        <app-topbar></app-topbar>
+  <app-stats-row />
 
-        <!-- Main content -->
-        <main class="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-            <!-- Greeting -->
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Good {{ timeOfDay() }}, {{ username }}
-                    </h1>
-                    <p class="text-base-content/60 mt-1">Capture today's thoughts before you forget them.</p>
-                </div>
-            </div>
+  <div id="record" class="grid scroll-mt-[calc(var(--bar)+24px)] grid-cols-1 gap-16 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] xl:gap-(--gap-columns)">
+    <app-voice-recorder class="block min-w-0" />
 
-            <app-stats-row></app-stats-row>
-
-            <!-- Record + side panel -->
-            <div id="record" class="grid grid-cols-1 lg:grid-cols-3 gap-6 scroll-mt-20">
-                <div class="lg:col-span-2">
-                    <app-voice-recorder></app-voice-recorder>
-                </div>
-
-                <div class="flex flex-col gap-6">
-                    <app-transcription-usage></app-transcription-usage>
-                    <app-weekly-streak></app-weekly-streak>
-                </div>
-            </div>
-
-            <app-recent-entries></app-recent-entries>
-        </main>
+    <div class="flex min-w-0 flex-col gap-16 xl:gap-(--gap-columns)">
+      <app-weekly-streak class="block" />
+      <app-on-this-day class="block" />
     </div>
+  </div>
 
-    <!-- Sidebar -->
-    <div class="drawer-side z-40">
-        <label for="dashboard-drawer" aria-label="Close menu" class="drawer-overlay"></label>
-        <app-sidebar></app-sidebar>
-    </div>
-</div>
+  <app-recent-entries class="block" />
+</app-shell>

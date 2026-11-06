@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AppShell } from '../helpers/app-shell/app-shell';
 
 @Component({
   selector: 'app-transcripts',
-  imports: [],
+  imports: [AppShell, RouterLink],
   templateUrl: './transcripts.html',
-  styleUrl: './transcripts.css',
 })
 export class Transcripts implements OnInit {
   async ngOnInit() {

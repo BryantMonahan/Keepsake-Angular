@@ -6,8 +6,7 @@ import { LandingPage } from './landing-page/landing-page';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  templateUrl: './app.html'
 })
 export class App {
   protected readonly title = signal('MyTimeline-Angular');

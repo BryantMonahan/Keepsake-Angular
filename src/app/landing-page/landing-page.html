@@ -1,3 +1,17 @@
-<h1>Welcome to My-Timeline</h1>
-<p>The place for all your audio aggregation and analysis needs.</p>
-<h3>Login</h3>
+<div class="flex min-h-dvh flex-col bg-paper">
+  <header class="border-b border-rule">
+    <div class="container flex min-h-(--bar) items-center justify-between gap-4">
+      <a class="wordmark text-xl" routerLink="/" aria-label="MyTimeline home">MyTimeline</a>
+      <a class="link font-medium" routerLink="/login">Log in</a>
+    </div>
+  </header>
+
+  <main class="container flex flex-1 flex-col justify-center py-16">
+    <h1 class="max-w-[13ch] text-[clamp(3rem,5vw+1rem,5.25rem)]">Record your day. Find it later.</h1>
+    <p class="lead mt-6 max-w-[40ch] text-ink-2">Speak, get a transcript, and keep every recording in one place.</p>
+    <div class="mt-10 flex flex-wrap items-center gap-4">
+      <a class="btn btn--primary btn--lg" routerLink="/register">Create an account</a>
+      <a class="btn btn--lg" routerLink="/login">Log in</a>
+    </div>
+  </main>
+</div>

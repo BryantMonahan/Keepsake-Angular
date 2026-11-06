@@ -1,26 +1,171 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Dose (by request) · redesign: restyle · dose: white
+ * nav: the sidebar rail and a top bar, kept · signature: the week organiser, seven tinted compartments, one per day, each holding that day's recordings · states: loading, empty, error, full
+ * axes: light/grotesk-sans/monochrome-charcoal · posture: committed · contrast: pass · v2.0.0 · by request: outline buttons, charcoal accent */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 · weakest: R, seven day tints risk a rainbow; they appear only where a day is named (the organiser, the past 7 days, a timeline date, the calendar) and charcoal alone does every signal */
+/* Hallmark · answered F4 · the white key in a segmented choice marks the current selection, not an action; the charcoal button is the one filled primary */
+/* Hallmark · dismissed 38iii · the timeline's entry title is a link across the whole head, not one word set apart */
+/* Hallmark · landing: shape Map / Diagram · hero Banner · job sign up · waive 44c and 59, the week's head shares the first screen with the hero · answered F4, the close repeats Create an account */
+
+/* Components are styled with Tailwind classes in their templates. This file holds only the theme
+ * and the few controls every screen shares (buttons, fields, switches, tags), so they change in one place. */
 @import 'tailwindcss';
-@plugin "daisyui";
+@import "./tokens.css";
+@import "./base.css" layer(base);
 
-.green-text-snackbar {
-    --mat-snack-bar-supporting-text-color: #00b906;
-    --mat-snack-bar-container-color: #333333;
-    text-align: center;
-    margin-bottom: 20px;
+/* The app drawer: an element beside, or inside something beside, the checked menu toggle in app-shell */
+@custom-variant drawer-open (&:where(.drawer-toggle:checked ~ *, .drawer-toggle:checked ~ * *));
+@custom-variant drawer-focus (&:where(.drawer-toggle:focus-visible ~ * *));
+
+/* Tailwind ships its own .container utility; this keeps the capped, centred one */
+.container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+
+@layer base {
+  body { color: var(--color-ink-2); line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--tracking-display); line-height: 1.02; color: var(--color-ink); font-variant-numeric: lining-nums; }
+  small, figcaption, th, label { font-family: var(--font-body); font-weight: 500; }
+  /* headings inside the signed-in app are a step down from the marketing scale */
+  app-shell h1 { font-size: var(--text-3xl); max-width: none; }
+  app-shell h2 { font-size: var(--text-xl); }
+  app-shell h3 { font-size: var(--text-lg); line-height: 1.15; }
 }
 
-.red-text-snackbar {
-    --mat-snack-bar-supporting-text-color: red;
-    --mat-snack-bar-container-color: #333333;
-    text-align: center;
+@layer components {
+  .num { font-family: var(--font-outlier); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .wordmark { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--tracking-display); color: var(--color-ink); text-decoration: none; line-height: 1; }
+  a.wordmark:hover { color: var(--color-accent-deep); }
+  .link { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-rule-2); text-underline-offset: 0.2em; transition: text-decoration-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); }
+  .link:hover { text-decoration-color: var(--color-accent); color: var(--color-accent-deep); }
+
+  /* Surfaces */
+  .card { background: var(--color-surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: var(--space-lg); }
+  .skeleton { border-radius: var(--radius-input); background: var(--color-paper-3); animation: skeleton-breathe 1.4s var(--ease-in-out) infinite alternate; }
+
+  /* Tinted plastic: the day's own colour, set with a tint-<0..6> class (0 is Sunday, as Date.getDay counts) */
+  .plastic {
+    --t: var(--p-thu);
+    position: relative; border-radius: var(--radius-card);
+    background: linear-gradient(color-mix(in oklab, var(--glint) 32%, transparent), transparent 18%), color-mix(in oklab, var(--t) 62%, transparent);
+    box-shadow: inset 0 1.5px 0 var(--glint), inset 0 -24px 36px -28px color-mix(in oklab, var(--t) 45%, var(--color-ink));
+  }
+  .tint-0 { --t: var(--p-sun); } .tint-1 { --t: var(--p-mon); } .tint-2 { --t: var(--p-tue); } .tint-3 { --t: var(--p-wed); }
+  .tint-4 { --t: var(--p-thu); } .tint-5 { --t: var(--p-fri); } .tint-6 { --t: var(--p-sat); }
+
+  /* Buttons: a crisp outline, with the one primary filled charcoal; pressing shifts the fill, nothing moves */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs);
+    min-height: 40px; padding: 0 var(--space-md); border: 1.5px solid var(--color-ink); border-radius: 8px;
+    background: transparent; color: var(--color-ink); font-family: var(--font-body); font-weight: 500; font-size: var(--text-sm); line-height: 1; white-space: nowrap; text-decoration: none; cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+  }
+  .btn:hover { background: var(--color-paper-3); }
+  .btn:active { background: var(--color-rule); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; background: transparent; }
+  .btn--primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); }
+  .btn--primary:hover { background: var(--color-ink-2); border-color: var(--color-ink-2); }
+  .btn--primary:active { background: var(--color-accent-deep); border-color: var(--color-accent-deep); }
+  .btn--primary:disabled { background: var(--color-accent); }
+  .btn--quiet { border-color: transparent; }
+  .btn--quiet:hover { background: var(--color-paper-3); }
+  .btn--quiet:active { background: var(--color-rule); }
+  .btn--danger { color: var(--color-error); }
+  .btn--danger:not(.btn--quiet) { border-color: var(--color-error); }
+  .btn--icon { position: relative; width: 40px; padding: 0; }
+  .btn--icon::after { content: ""; position: absolute; inset: -2px; }
+  .btn--lg { min-height: 52px; padding: 0 var(--space-lg); font-size: var(--text-md); }
+  .btn--lg.btn--icon { width: 52px; padding: 0; }
+
+  /* Fields */
+  .input {
+    width: 100%; min-height: 40px; padding: 0 var(--space-sm); border: var(--rule-hair) solid var(--color-muted); border-radius: var(--radius-input);
+    background: var(--color-surface); color: var(--color-ink); font-family: var(--font-body); font-weight: 400; font-size: var(--text-md);
+    transition: border-color var(--dur-micro) var(--ease-out);
+  }
+  .input::placeholder { color: var(--color-muted); }
+  .input:hover { border-color: var(--color-ink-2); }
+  .input:focus, .input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -1px; }
+  .input:disabled { opacity: 0.55; cursor: not-allowed; }
+  textarea.input { min-height: 96px; padding: var(--space-sm); resize: vertical; line-height: 1.5; }
+
+  .switch { display: inline-flex; align-items: center; gap: var(--space-sm); cursor: pointer; font-size: var(--text-sm); color: var(--color-ink); }
+  .switch input {
+    appearance: none; position: relative; flex-shrink: 0; width: 44px; height: 26px; margin: 0;
+    border: var(--rule-hair) solid var(--color-muted); border-radius: var(--radius-pill); background: var(--color-paper-3); cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+  }
+  .switch input::before {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: var(--radius-pill);
+    background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-rule-2), 0 1px 2px var(--color-scrim);
+    transition: transform var(--dur-short) var(--ease-in-out);
+  }
+  .switch input:hover { border-color: var(--color-ink); }
+  .switch input:checked { background: var(--color-accent); border-color: var(--color-accent-deep); }
+  .switch input:checked::before { transform: translateX(18px); }
+  .switch input:active::before { transform: scale(0.9); }
+  .switch input:checked:active::before { transform: translateX(18px) scale(0.9); }
+  .switch input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .switch input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .meter { appearance: none; display: block; width: 100%; height: 8px; border: 0; border-radius: var(--radius-pill); overflow: hidden; background: var(--color-paper-3); color: var(--color-accent); }
+  .meter::-webkit-progress-bar { background: var(--color-paper-3); }
+  .meter::-webkit-progress-value { background: currentColor; border-radius: var(--radius-pill); }
+  .meter::-moz-progress-bar { background: currentColor; border-radius: var(--radius-pill); }
+
+  /* Tags: solid charcoal for a finished transcript, the rest quieter */
+  .tag {
+    display: inline-flex; align-items: center; gap: var(--space-2xs); padding: var(--space-3xs) var(--space-sm); border-radius: var(--radius-pill);
+    border: var(--rule-hair) solid var(--color-rule-2); color: var(--color-ink-2); font-family: var(--font-body); font-weight: 500; font-size: var(--text-xs); line-height: 1.4; white-space: nowrap;
+  }
+  .tag--done { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-accent-ink); }
+  .tag--pending { background: var(--color-paper-3); border-color: var(--color-paper-3); color: var(--color-ink); }
+  .tag--none { color: var(--color-muted); }
+
+  /* A choice between a few: plastic keys in a tray, mint when chosen */
+  .seg { display: inline-flex; gap: var(--space-3xs); max-width: 100%; overflow-x: auto; padding: var(--space-3xs); border-radius: var(--radius-input); background: var(--color-paper-3); }
+  .seg > button {
+    flex-shrink: 0; min-height: 34px; padding: 0 var(--space-md); border: 0; border-radius: 8px;
+    background: transparent; color: var(--color-ink-2); font-family: var(--font-body); font-weight: 500; font-size: var(--text-sm);
+    white-space: nowrap; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+  }
+  .seg > button:hover { background: var(--color-paper-2); color: var(--color-ink); }
+  .seg > button:active { background: var(--color-surface); }
+  .seg > button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { background: var(--color-surface); color: var(--color-ink); box-shadow: 0 0 0 1px var(--color-rule-2), 0 1px 2px var(--color-scrim); }
+  .seg > button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  /* A menu on <details> */
+  .menu { position: relative; }
+  .menu > summary { list-style: none; cursor: pointer; }
+  .menu > summary::-webkit-details-marker { display: none; }
+  .menu__list {
+    position: absolute; right: 0; top: calc(100% + var(--space-xs)); z-index: var(--z-dropdown); min-width: 200px; margin: 0; padding: var(--space-2xs);
+    list-style: none; background: var(--color-surface); border-radius: var(--radius-card); box-shadow: var(--shadow-lift);
+  }
+  .menu__item {
+    display: flex; align-items: center; width: 100%; min-height: 40px; padding: 0 var(--space-sm); border: 0; border-radius: 8px; background: none;
+    color: var(--color-ink); font-family: var(--font-body); font-weight: 500; font-size: var(--text-sm);
+    text-align: left; text-decoration: none; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out);
+  }
+  .menu__item:hover { background: var(--color-paper-2); }
+  .menu__item:active { background: var(--color-accent-soft); }
+  .menu__item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
 }
 
-.yellow-text-snackbar {
-    --mat-snack-bar-supporting-text-color: #e6c200;
-    --mat-snack-bar-container-color: #333333;
-    text-align: center;
-}
+@keyframes skeleton-breathe { from { opacity: 0.55; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 
+/* Angular Material: the snackbar on green-black, the dialog as a white card */
+.green-text-snackbar, .red-text-snackbar, .yellow-text-snackbar {
+  --mat-snack-bar-container-color: var(--color-ink);
+  --mat-snack-bar-container-shape: var(--radius-input);
+  --mat-snack-bar-supporting-text-font: var(--font-body);
+  text-align: center;
+}
+.green-text-snackbar { --mat-snack-bar-supporting-text-color: var(--color-on-ink-success); margin-bottom: var(--space-lg); }
+.red-text-snackbar { --mat-snack-bar-supporting-text-color: var(--color-on-ink-error); }
+.yellow-text-snackbar { --mat-snack-bar-supporting-text-color: var(--color-on-ink-warn); }
 .mat-mdc-dialog-container .mdc-dialog__surface {
-    /* the default background is white which causes weird looking corners */
-    background: transparent;
+  /* the default background is white which causes weird looking corners */
+  background: transparent;
+  border-radius: var(--radius-card);
 }
+.cdk-overlay-dark-backdrop { background: var(--color-scrim); }
