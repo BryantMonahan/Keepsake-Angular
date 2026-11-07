@@ -10,20 +10,29 @@
   <div class="min-w-0 flex-1">
     <label class="relative block w-full max-w-[420px]">
       <span class="sr-only">Search entries</span>
-      <svg class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg"
-        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        aria-hidden="true">
+      <svg class="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-muted"
+        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
       </svg>
-      <input type="search" class="input pl-10 text-md sm:text-sm" placeholder="Search entries, transcripts…" />
+
+      <ng-select [items]="filteredEntries()" bindLabel="title"
+        class="text-md sm:text-sm [&_.ng-input]:pl-10! [&_.ng-value-container]:pl-10! hide-dropdown-arrow"
+        placeholder="Search entries…" [searchFn]="() => true" (change)="goToEntry($event)" [(ngModel)]="selectedId">
+        <ng-template ng-option-tmp let-item="item">
+          <p class="font-bold">{{ item.title }}</p>
+          <p class="font-light">{{ item.description.length ? item.description : "No description" }}</p>
+          <p>{{ item.created ?? item.uploaded | date: 'MMM d, y, h:mm a' }}</p>
+        </ng-template>
+      </ng-select>
     </label>
   </div>
 
   <div class="flex items-center gap-1">
     <button type="button" class="btn btn--quiet btn--icon" aria-label="Notifications">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
       </svg>
@@ -31,7 +40,8 @@
 
     <details class="menu">
       <summary class="btn btn--quiet btn--icon rounded-pill" aria-label="Account menu">
-        <span class="inline-grid size-8 place-items-center rounded-pill bg-accent-soft text-xs font-medium text-ink" aria-hidden="true">BM</span>
+        <span class="inline-grid size-8 place-items-center rounded-pill bg-accent-soft text-xs font-medium text-ink"
+          aria-hidden="true">BM</span>
       </summary>
       <ul class="menu__list">
         <li><a class="menu__item">Profile</a></li>

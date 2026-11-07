@@ -1,1 +1,4 @@
 /* Styled with Tailwind in topbar.html. Kept empty so topbar.ts (and the stashed search work) stays untouched. */
+:host ::ng-deep .hide-dropdown-arrow .ng-arrow-wrapper {
+    display: none !important;
+}
