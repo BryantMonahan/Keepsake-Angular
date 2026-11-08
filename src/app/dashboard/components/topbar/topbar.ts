@@ -42,8 +42,9 @@ export class Topbar {
     this.searchTerm.set(event.term)
   }
 
-  goToEntry(event: JournalEntry) {
-    this.ngSelectComponent.clearModel()
+  goToEntry(event: JournalEntry | undefined) {
+    if (!event) return // clearing the model triggers a change which passes an undefined object
     this.router.navigate(['/recordings'], { queryParams: { id: event.id } })
+    this.ngSelectComponent.clearModel()
   }
 }

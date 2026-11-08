@@ -19,7 +19,8 @@
       <fieldset class="grid max-w-full min-w-0 gap-2">
         <legend class="mb-2 text-sm text-ink">Status</legend>
         <div class="seg max-sm:grid max-sm:w-full max-sm:grid-cols-2">
-          <button type="button" [attr.aria-pressed]="statusFilter() === 'all'" (click)="setStatusFilter('all')">All</button>
+          <button type="button" [attr.aria-pressed]="statusFilter() === 'all'"
+            (click)="setStatusFilter('all')">All</button>
           <button type="button" [attr.aria-pressed]="statusFilter() === 'transcribed'"
             (click)="setStatusFilter('transcribed')">Transcribed</button>
           <button type="button" [attr.aria-pressed]="statusFilter() === 'processing'"
@@ -98,7 +99,7 @@
         No recordings
         } @else {
         Showing {{ rangeStart() }} to {{ rangeEnd() }}
-        of {{ this.visible().length }}
+        of {{ this.filteredSorted().length }}
         }
       </h2>
       <div class="flex flex-wrap items-center gap-4">
@@ -112,7 +113,8 @@
               <option value="longest">Longest first</option>
               <option value="shortest">Shortest first</option>
             </select>
-            <app-icon name="chevron-down" [size]="16" class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-ink" />
+            <app-icon name="chevron-down" [size]="16"
+              class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-ink" />
           </span>
         </div>
         <span class="text-sm font-medium text-muted">{{ pageSize }} per page</span>
@@ -122,7 +124,8 @@
     @if (loading()) {
     <ul aria-hidden="true">
       @for (row of [1, 2, 3, 4, 5, 6]; track row) {
-      <li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0">
+      <li
+        class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0">
         <div class="skeleton size-12"></div>
         <div class="grid gap-2">
           <div class="skeleton h-4 w-1/3"></div>
@@ -150,7 +153,8 @@
     @else {
     <ul>
       @for (entry of visible(); track entry.id) {
-      <li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0 md:grid-cols-[auto_minmax(0,1fr)_auto]"
+      <li [id]="entry.id"
+        class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 border-b border-rule py-6 last:border-b-0 md:grid-cols-[auto_minmax(0,1fr)_auto]"
         [class]="playingKey() === entry.objectKey ? '-mx-3 rounded-input bg-paper-2 px-3' : ''">
         <div>
           @if (playingKey() === entry.objectKey && isPlaying()) {
@@ -192,7 +196,8 @@
             <div>
               <dt class="sr-only">Recorded</dt>
               <dd>
-                {{ entry.created ?? entry.uploaded | date: 'MMM d, y' }} at {{ entry.created ?? entry.uploaded | date: 'h:mm a' }}
+                {{ entry.created ?? entry.uploaded | date: 'MMM d, y' }} at {{ entry.created ?? entry.uploaded | date:
+                'h:mm a' }}
               </dd>
             </div>
             <div>
@@ -235,7 +240,8 @@
 
     @if (totalPages() > 1) {
     <nav class="flex flex-wrap items-center justify-between gap-4 pt-6" aria-label="Pages">
-      <p class="text-sm font-medium text-muted">Page <span class="num">{{ page() + 1 }}</span> of <span class="num">{{ totalPages() }}</span></p>
+      <p class="text-sm font-medium text-muted">Page <span class="num">{{ page() + 1 }}</span> of <span class="num">{{
+          totalPages() }}</span></p>
       <div class="seg">
         <button type="button" aria-label="First page" [disabled]="page() === 0" (click)="goToPage(0)">First</button>
         <button type="button" [disabled]="page() === 0" (click)="prevPage()">Previous</button>

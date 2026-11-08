@@ -1,6 +1,6 @@
 import { TranscriptionStatus } from './../Types/transcription-status';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, ViewportScroller } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AppShell } from '../helpers/app-shell/app-shell';
 import { CHIP_X } from '../helpers/ui-classes';
@@ -31,32 +31,43 @@ export class Recordings implements OnInit {
   private dataService = inject(DataService)
   private matDialog = inject(MatDialog)
   private route = inject(ActivatedRoute)
+  private scroller = inject(ViewportScroller)
+  // private location = inject(Location)
 
   TranscriptionStatus = TranscriptionStatus
   readonly chipX = CHIP_X
   waveSurfer = signal<WaveSurfer | null>(null)
   providedId = signal<string | null>(null)
+  loading = signal(false)
+  page = signal(0)
 
-  async ngOnInit() {
-    try {
-      this.loading.set(true)
-      await this.dataService.loadEntries()
-      const id = this.route.snapshot.queryParams['id'] ?? null
-      // if (id) this.playingKey.set(this.entries().find(e => e.id === id)?.objectKey ?? "")
-      if (id) await this.playAudio(this.entries().find(e => e.id === id)?.objectKey ?? "")
-      if (id) this.pauseAudio()
-      this.loading.set(false)
-      console.log(id, this.playingKey())
-    } catch (error) {
-      console.log(error)
-      this.alertService.openSnackbar('Something went wrong loading entries', 'red', 2000)
-      this.loading.set(false)
+  statusFilter = signal<StatusFilter>('all')
+  fromDate = signal<string | null>(null)
+  toDate = signal<string | null>(null)
+  sortOrder = signal<SortOrder>('newest')
+
+  playingKey = signal<string | null>(null)
+  isPlaying = signal(false)
+  currentTime = signal(0)
+  duration = signal(0)
+
+  totalPages = computed(() => Math.ceil(this.filteredSorted().length / this.pageSize))
+  rangeStart = computed(() => this.filteredSorted().length === 0 ? 0 : this.page() * this.pageSize + 1)
+  rangeEnd = computed(() => Math.min((this.page() + 1) * this.pageSize, this.filteredSorted().length))
+  hasActiveFilters = computed(() => this.statusFilter() !== 'all' || !!this.fromDate() || !!this.toDate())
+  statusLabel = computed(() => {
+    switch (this.statusFilter()) {
+      case 'transcribed': return 'Transcribed'
+      case 'processing': return 'Processing'
+      case 'none': return 'No transcript'
+      default: return 'All'
     }
-  }
-  readonly pageSize = 50
+  })
+
+  readonly pageSize = 5
 
   entries = this.dataService.entries
-  visible = computed<JournalEntry[]>(() => {
+  filteredSorted = computed<JournalEntry[]>(() => {
     let currEntries = this.entries().slice()
 
     // handle any filtering that's been applied
@@ -120,33 +131,49 @@ export class Recordings implements OnInit {
         return a.secLength - b.secLength
       })
     }
-    return currEntries.slice(this.page() * this.pageSize, this.page() * this.pageSize + this.pageSize)
+    return currEntries
   })
-  loading = signal(false)
-  page = signal(0)
+  visible = computed(() => {
+    return this.filteredSorted().slice(this.page() * this.pageSize, this.page() * this.pageSize + this.pageSize)
+  })
 
-  statusFilter = signal<StatusFilter>('all')
-  fromDate = signal<string | null>(null)
-  toDate = signal<string | null>(null)
-  sortOrder = signal<SortOrder>('newest')
 
-  playingKey = signal<string | null>(null)
-  isPlaying = signal(false)
-  currentTime = signal(0)
-  duration = signal(0)
+  async ngOnInit() {
+    try {
+      this.loading.set(true)
+      await this.dataService.loadEntries()
+      // const id = this.route.snapshot.queryParams['id'] ?? null
 
-  totalPages = computed(() => Math.ceil(this.visible().length / this.pageSize))
-  rangeStart = computed(() => this.visible().length === 0 ? 0 : this.page() * this.pageSize + 1)
-  rangeEnd = computed(() => Math.min((this.page() + 1) * this.pageSize, this.visible().length))
-  hasActiveFilters = computed(() => this.statusFilter() !== 'all' || !!this.fromDate() || !!this.toDate())
-  statusLabel = computed(() => {
-    switch (this.statusFilter()) {
-      case 'transcribed': return 'Transcribed'
-      case 'processing': return 'Processing'
-      case 'none': return 'No transcript'
-      default: return 'All'
+
+      this.route.queryParams.subscribe({
+        next: async (q) => {
+          if (typeof q === 'object' && 'id' in q && typeof q['id'] === 'string') {
+            let index = 0
+            let entry = this.filteredSorted().find((e, i) => {
+              if (e.id === q['id']) {
+                index = i
+                return true
+              }
+              return false
+            })
+            if (!entry) throw new Error("Entry could not be found")
+            this.page.set(Math.floor(index / this.pageSize))
+            await this.playAudio(entry.objectKey, false)
+            this.pauseAudio()
+            this.scroller.setOffset([0, 200])
+            this.scroller.scrollToAnchor(q['id'])
+          }
+        }
+      })
+
+      this.loading.set(false)
+    } catch (error) {
+      console.log(error)
+      this.alertService.openSnackbar('Something went wrong loading entries', 'red', 2000)
+      this.loading.set(false)
     }
-  })
+  }
+
 
 
   setStatusFilter(status: StatusFilter) {
@@ -215,7 +242,7 @@ export class Recordings implements OnInit {
     this.page.update(p => p + 1)
   }
 
-  async playAudio(objectKey: string) {
+  async playAudio(objectKey: string, autoPlay = true) {
     if (objectKey === this.playingKey()) {
       this.resumeAudio()
       return
@@ -226,7 +253,6 @@ export class Recordings implements OnInit {
       const urlRes = await axios.get<string>(`${import.meta.env.NG_APP_API_URL}/api/Audio/get-url`, {
         params: { objectKey }
       })
-      console.log(document.getElementById(objectKey)) // null so wavesurfer doesn't have a container to build into
       this.waveSurfer.set(WaveSurfer.create({
         container: document.getElementById(objectKey)!,
         waveColor: themeColor('--color-rule-2'),
@@ -243,9 +269,11 @@ export class Recordings implements OnInit {
       this.duration.set(entry.secLength)
       if (this.waveSurfer()) {
         this.waveSurfer()?.on('ready', () => {
-          this.isPlaying.set(true)
           this.playingKey.set(objectKey)
-          this.waveSurfer()?.play()
+          if (autoPlay) {
+            this.isPlaying.set(true)
+            this.waveSurfer()?.play()
+          }
         })
         this.waveSurfer()?.on('timeupdate', (time) => this.currentTime.set(time))
         this.waveSurfer()?.on('finish', () => {

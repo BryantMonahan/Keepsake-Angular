@@ -577,3 +577,8 @@
 .cdk-overlay-dark-backdrop {
   background: var(--color-scrim);
 }
+
+
+html {
+  scroll-behavior: smooth;
+}
