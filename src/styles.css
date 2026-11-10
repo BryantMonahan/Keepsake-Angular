@@ -582,3 +582,9 @@
 html {
   scroll-behavior: smooth;
 }
+
+:root {
+  --mat-tooltip-container-color: var(--color-ink);
+  --mat-tooltip-supporting-text-color: var(--color-paper);
+  --mat-tooltip-supporting-text-size: 12px;
+}

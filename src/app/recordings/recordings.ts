@@ -64,7 +64,7 @@ export class Recordings implements OnInit {
     }
   })
 
-  readonly pageSize = 5
+  readonly pageSize = 50
 
   entries = this.dataService.entries
   filteredSorted = computed<JournalEntry[]>(() => {

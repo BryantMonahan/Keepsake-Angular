@@ -1,11 +1,85 @@
 <app-shell>
   <header>
-    <h1>Transcripts</h1>
-    <p class="mt-2 max-w-[52ch] text-lg leading-snug text-ink-2">Transcripts live with their recordings for now.</p>
+    @if (allTranscribed().length === 0) {
+    <p class="mt-2 max-w-[52ch] text-lg leading-snug text-ink-2">It doesn't seem like you have any recordings
+      transcribed yet.</p>
+    } @else {
+    <h1>Looking for something specific?</h1>
+    <p>Start typing to search inside your transcripts</p>
+    <div>
+      <input type="text" name="search" id="search" class="w-full border input" [(ngModel)]="searchInput"
+        (ngModelChange)="page.set(0)">
+    </div>
+    <h1 class="mt-5">Transcripts</h1>
+    }
   </header>
+  @if (fromDate() || toDate()) {
+  <span class="tag tag--pending gap-2 pr-1">
+    {{ fromDate() ? (fromDate() | date: 'MMM d, y') : 'Anytime' }}
+    to
+    {{ toDate() ? (toDate() | date: 'MMM d, y') : 'now' }}
+  </span>
+  }
+  @if (filteredEntries().length === 0) {
+  <p class="mt-2 max-w-[52ch] leading-snug text-ink-2">No transcripts found</p>
+  }
+  <div class="bg-white p-5 rounded-2xl shadow-2xl">
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4">
+      <h2 class="min-w-0 text-lg! break-words">
+        Showing {{ rangeStart() }} to {{ rangeEnd() }}
+        of {{ filteredSorted().length }}
+      </h2>
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-ink" for="sort-order">Sort</label>
+          <span class="relative inline-flex w-42">
+            <select id="sort-order" class="input cursor-pointer appearance-none pr-10 text-sm" aria-label="Sort order"
+              [value]="sortOrder()" (change)="setSortOrder($event)">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="longest">Longest first</option>
+              <option value="shortest">Shortest first</option>
+            </select>
+            <app-icon name="chevron-down" [size]="16"
+              class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-ink" />
+          </span>
+        </div>
+        <span class="text-sm font-medium text-muted">{{ pageSize }} per page</span>
+      </div>
+    </div>
 
-  <div class="flex flex-col items-start gap-4 py-10">
-    <p class="max-w-[48ch]">Every transcribed entry shows its words under its title in Recordings and on your Timeline.</p>
-    <a class="btn btn--primary" [routerLink]="['/recordings']">Open Recordings</a>
+    @for (entry of visible(); track entry.id) {
+    <div class="mt-5">
+      <h2> <a matTooltip="Listen to entry" [matTooltipPosition]="'above'" class="hover:underline"
+          [routerLink]="['/recordings']" [queryParams]="{ id: entry.id }">{{ entry.title
+          }}</a></h2>
+      <p [innerHTML]="entry.transcription ?? '' | highlight: keywords() ?? []"></p>
+      <p class="text-sm text-muted">
+
+        {{ entry.created ?? entry.uploaded | date: 'MMM d, y' }} at {{ entry.created ?? entry.uploaded | date:
+        'h:mm a' }}
+      </p>
+    </div>
+    }
+
+    @if (totalPages() > 1) {
+    <nav class="flex flex-wrap items-center justify-between gap-4 pt-6" aria-label="Pages">
+      <p class="text-sm font-medium text-muted">Page <span class="num">{{ page() + 1 }}</span> of <span class="num">{{
+          totalPages() }}</span></p>
+      <div class="seg">
+        <button type="button" aria-label="First page" [disabled]="page() === 0" (click)="goToPage(0)">First</button>
+        <button type="button" [disabled]="page() === 0" (click)="prevPage()">Previous</button>
+        <button type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Next</button>
+        <button type="button" aria-label="Last page" [disabled]="page() + 1 >= totalPages()"
+          (click)="goToPage(totalPages() - 1)">Last</button>
+      </div>
+    </nav>
+    }
   </div>
+
+  <!-- <div class="flex flex-col items-start gap-4 py-10">
+  <p class="max-w-[48ch]">Every transcribed entry shows its words under its title in Recordings and on your Timeline.
+  </p>
+  <a class="btn btn--primary" [routerLink]="['/recordings']">Open Recordings</a>
+</div> -->
 </app-shell>
